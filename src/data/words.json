@@ -1,0 +1,38 @@
+[
+  {"id": "cat", "word": "cat", "level": 1, "syllables": ["cat"], "tags": ["short"], "picture": "cat", "misspellings": ["cta", "ct", "kat"], "soundAlikes": ["hat", "cut", "cap"]},
+  {"id": "bed", "word": "bed", "level": 1, "syllables": ["bed"], "tags": ["short", "confusable"], "picture": "bed", "misspellings": ["bde", "bd", "dbe"], "soundAlikes": ["bad", "red", "bid"]},
+  {"id": "dog", "word": "dog", "level": 1, "syllables": ["dog"], "tags": ["short", "confusable"], "picture": "dog", "misspellings": ["dgo", "dg", "doq"], "soundAlikes": ["dig", "log", "dot"]},
+  {"id": "sun", "word": "sun", "level": 1, "syllables": ["sun"], "tags": ["short", "confusable"], "picture": "sun", "misspellings": ["snu", "sn", "suu"], "soundAlikes": ["run", "sin", "sum"]},
+  {"id": "pig", "word": "pig", "level": 1, "syllables": ["pig"], "tags": ["short", "confusable"], "picture": "pig", "misspellings": ["pgi", "pg", "qig"], "soundAlikes": ["big", "peg", "pin"]},
+  {"id": "ship", "word": "ship", "level": 1, "syllables": ["ship"], "tags": ["short", "digraph", "confusable"], "picture": "ship", "misspellings": ["shpi", "shp", "sihp"], "soundAlikes": ["chip", "sheep", "sip"]},
+  {"id": "fish", "word": "fish", "level": 1, "syllables": ["fish"], "tags": ["short", "digraph"], "picture": "fish", "misspellings": ["fsih", "fis", "fihs"], "soundAlikes": ["dish", "wish", "fist"]},
+
+  {"id": "hand", "word": "hand", "level": 2, "syllables": ["hand"], "tags": ["short", "blend", "confusable"], "picture": "hand", "misspellings": ["hnad", "hnd", "hadn"], "soundAlikes": ["band", "sand", "hard"]},
+  {"id": "frog", "word": "frog", "level": 2, "syllables": ["frog"], "tags": ["short", "blend"], "picture": "frog", "misspellings": ["forg", "frg", "frogg"], "soundAlikes": ["fog", "from", "dog"]},
+  {"id": "star", "word": "star", "level": 2, "syllables": ["star"], "tags": ["short", "blend"], "picture": "star", "misspellings": ["satr", "sta", "stra"], "soundAlikes": ["car", "stir", "start"]},
+  {"id": "boat", "word": "boat", "level": 2, "syllables": ["boat"], "tags": ["short", "vowel-team", "confusable"], "picture": "boat", "misspellings": ["bota", "bote", "doat"], "soundAlikes": ["goat", "boot", "bat"]},
+  {"id": "rain", "word": "rain", "level": 2, "syllables": ["rain"], "tags": ["short", "vowel-team"], "picture": "rain cloud", "misspellings": ["rian", "rane", "rayn"], "soundAlikes": ["train", "ran", "rail"]},
+  {"id": "moon", "word": "moon", "level": 2, "syllables": ["moon"], "tags": ["short", "vowel-team", "confusable"], "picture": "moon", "misspellings": ["moom", "mooon", "noom"], "soundAlikes": ["noon", "man", "mood"]},
+  {"id": "duck", "word": "duck", "level": 2, "syllables": ["duck"], "tags": ["short", "digraph", "confusable"], "picture": "duck", "misspellings": ["dcuk", "duk", "dukc"], "soundAlikes": ["luck", "dock", "deck"]},
+
+  {"id": "queen", "word": "queen", "level": 3, "syllables": ["queen"], "tags": ["medium", "vowel-team", "confusable"], "picture": "crown", "misspellings": ["qeuen", "qeen", "kween"], "soundAlikes": ["green", "keen", "quiet"]},
+  {"id": "friend", "word": "friend", "level": 3, "syllables": ["friend"], "tags": ["medium", "irregular", "blend"], "picture": "two people waving", "misspellings": ["firend", "frend", "freind"], "soundAlikes": ["fried", "trend", "find"]},
+  {"id": "because", "word": "because", "level": 3, "syllables": ["be", "cause"], "tags": ["long", "irregular", "multi", "confusable"], "picture": null, "misspellings": ["becuase", "becaus", "becoz"], "soundAlikes": ["became", "cause", "below"]},
+  {"id": "said", "word": "said", "level": 3, "syllables": ["said"], "tags": ["short", "irregular", "vowel-team"], "picture": "speech bubble", "misspellings": ["siad", "sed", "sayd"], "soundAlikes": ["sad", "side", "seed"]},
+  {"id": "house", "word": "house", "level": 3, "syllables": ["house"], "tags": ["medium", "vowel-team"], "picture": "house", "misspellings": ["huose", "hous", "howse"], "soundAlikes": ["mouse", "horse", "hose"]},
+  {"id": "rabbit", "word": "rabbit", "level": 3, "syllables": ["rab", "bit"], "tags": ["medium", "multi", "confusable"], "picture": "rabbit", "misspellings": ["rbabit", "rabit", "dabbit"], "soundAlikes": ["habit", "robot", "ribbon"]},
+  {"id": "garden", "word": "garden", "level": 3, "syllables": ["gar", "den"], "tags": ["medium", "multi", "confusable"], "picture": "flowers in a garden", "misspellings": ["gadren", "gardn", "gardin"], "soundAlikes": ["golden", "harden", "pardon"]},
+
+  {"id": "people", "word": "people", "level": 4, "syllables": ["peo", "ple"], "tags": ["medium", "irregular", "multi", "confusable"], "picture": "group of people", "misspellings": ["poeple", "peple", "peeple"], "soundAlikes": ["purple", "pebble", "steeple"]},
+  {"id": "animal", "word": "animal", "level": 4, "syllables": ["an", "i", "mal"], "tags": ["medium", "multi"], "picture": "lion", "misspellings": ["anmial", "animl", "aminal"], "soundAlikes": ["camel", "annual", "enamel"]},
+  {"id": "elephant", "word": "elephant", "level": 4, "syllables": ["el", "e", "phant"], "tags": ["long", "multi", "digraph"], "picture": "elephant", "misspellings": ["elehpant", "elephnt", "elefant"], "soundAlikes": ["elegant", "element", "infant"]},
+  {"id": "beautiful", "word": "beautiful", "level": 4, "syllables": ["beau", "ti", "ful"], "tags": ["long", "irregular", "multi", "confusable"], "picture": "rainbow", "misspellings": ["beautful", "beatiful", "beutiful"], "soundAlikes": ["bountiful", "dutiful", "beautify"]},
+  {"id": "butterfly", "word": "butterfly", "level": 4, "syllables": ["but", "ter", "fly"], "tags": ["long", "multi", "confusable"], "picture": "butterfly", "misspellings": ["butterlfy", "butterfy", "dutterfly"], "soundAlikes": ["buttercup", "battery", "butter"]},
+
+  {"id": "thought", "word": "thought", "level": 5, "syllables": ["thought"], "tags": ["long", "irregular", "digraph"], "picture": "thought bubble", "misspellings": ["thoguht", "thougt", "thot"], "soundAlikes": ["taught", "though", "fought"]},
+  {"id": "different", "word": "different", "level": 5, "syllables": ["dif", "fer", "ent"], "tags": ["long", "multi"], "picture": null, "misspellings": ["diffrent", "diferent", "differant"], "soundAlikes": ["difference", "distant", "dividend"]},
+  {"id": "important", "word": "important", "level": 5, "syllables": ["im", "por", "tant"], "tags": ["long", "multi", "confusable"], "picture": null, "misspellings": ["importnt", "importent", "inportant"], "soundAlikes": ["impatient", "imported", "informant"]},
+  {"id": "dinosaur", "word": "dinosaur", "level": 5, "syllables": ["di", "no", "saur"], "tags": ["long", "multi", "vowel-team"], "picture": "dinosaur", "misspellings": ["dinosar", "dinasaur", "dinosore"], "soundAlikes": ["dinner", "diner", "dynamite"]},
+  {"id": "adventure", "word": "adventure", "level": 5, "syllables": ["ad", "ven", "ture"], "tags": ["long", "multi", "confusable"], "picture": "treasure map", "misspellings": ["adventre", "advencher", "abventure"], "soundAlikes": ["advantage", "venture", "departure"]},
+  {"id": "knowledge", "word": "knowledge", "level": 5, "syllables": ["knowl", "edge"], "tags": ["long", "irregular", "multi", "silent"], "picture": "stack of books", "misspellings": ["knowldge", "knowlege", "nolledge"], "soundAlikes": ["college", "porridge", "knowing"]}
+]
