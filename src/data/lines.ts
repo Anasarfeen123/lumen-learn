@@ -36,6 +36,7 @@ export const GAME_INTRO = {
   detective: "Find the word that's spelled right.",
   sound: 'Listen, then tap the word you hear.',
   builder: 'Put the letters in order to build the word.',
+  speller: 'Spell the word one beat at a time.',
 } as const;
 
 /** Split anything longer than 12 words into separate bubbles, at sentence breaks. */

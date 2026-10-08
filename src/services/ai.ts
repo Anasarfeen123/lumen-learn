@@ -24,15 +24,19 @@ export function validSummary(text: string, stats: unknown): boolean {
   return (text.match(/\d+/g) ?? []).every((n) => allowed.has(n));
 }
 
+// Static hosting (e.g. GitHub Pages) has no server: build with VITE_LUMO_API=off.
+const API = import.meta.env.VITE_LUMO_API ?? '/api/lumo';
+
 async function post(path: string, body: unknown, timeoutMs: number): Promise<string | null> {
+  if (API === 'off') return null;
   try {
-    const res = await fetch(path, {
+    const res = await fetch(`${API}${path}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(timeoutMs),
     });
-    if (!res.ok) return null;
+    if (res.status !== 200) return null; // 204: AI not configured; use the template
     const data = (await res.json()) as { text?: unknown };
     return typeof data.text === 'string' ? data.text.trim() : null;
   } catch {
@@ -42,12 +46,12 @@ async function post(path: string, body: unknown, timeoutMs: number): Promise<str
 
 /** Rephrase a template insight in Lumo's voice, or null to keep the template. */
 export async function rephraseInsight(template: string, context: Record<string, string>): Promise<string | null> {
-  const text = await post('/api/lumo/insight', { template, context }, 2500);
+  const text = await post('/insight', { template, context }, 2500);
   return text && validInsight(text) ? text : null;
 }
 
 /** Weekly grown-up summary from aggregate stats. `{name}` is filled in on the device. */
 export async function writeSummary(stats: object): Promise<string | null> {
-  const text = await post('/api/lumo/summary', { stats }, 4000);
+  const text = await post('/summary', { stats }, 4000);
   return text && validSummary(text, stats) ? text : null;
 }

@@ -1,5 +1,5 @@
 // Production server: serves the built app from dist/ and Lumo's AI endpoints.
-// Usage: npm run build && ANTHROPIC_API_KEY=... npm start
+// Usage: npm run build && GROQ_API_KEY=... npm start
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
@@ -43,6 +43,6 @@ async function serveStatic(req, res) {
 }
 
 createServer((req, res) => lumoApi(req, res, () => serveStatic(req, res))).listen(PORT, () => {
-  const ai = process.env.ANTHROPIC_API_KEY ? 'on' : 'off (templates only)';
+  const ai = process.env.GROQ_API_KEY ? `on (Groq)` : 'off (templates only)';
   console.log(`Lumen running at http://localhost:${PORT}  ·  AI phrasing: ${ai}`);
 });

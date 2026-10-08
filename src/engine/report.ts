@@ -12,6 +12,7 @@ export const GAME_NAME: Record<GameId, string> = {
   detective: 'Word Detective',
   sound: 'Sound Match',
   builder: 'Word Builder',
+  speller: 'Syllable Speller',
 };
 
 export type Band = 'Getting started' | 'Growing' | 'Confident';
@@ -56,7 +57,7 @@ function row(p: Profile, tag: Tag): TagRow {
 export function buildReport(p: Profile, now = new Date()): Report {
   const since = now.getTime() - WEEK_MS;
   const week = p.rounds.filter((r) => new Date(r.t).getTime() >= since);
-  const games: Record<GameId, number> = { detective: 0, sound: 0, builder: 0 };
+  const games: Record<GameId, number> = { detective: 0, sound: 0, builder: 0, speller: 0 };
   week.forEach((r) => games[r.game]++);
 
   const known = (Object.keys(p.mastery) as Tag[]).filter((t) => (p.mastery[t]?.n ?? 0) >= MIN_N);

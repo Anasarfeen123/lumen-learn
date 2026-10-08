@@ -69,7 +69,7 @@ export function demoProfile(now = new Date()): Profile {
     onboarded: true,
     xp: 280,
     unlocked: ['gold', 'leaf-cap', 'mint'],
-    gameLevels: { detective: 2, sound: 2, builder: 2 },
+    gameLevels: { detective: 2, sound: 2, builder: 2, speller: 1 },
     mastery: structuredClone(DEMO_MASTERY),
     history,
     rounds,
@@ -77,7 +77,7 @@ export function demoProfile(now = new Date()): Profile {
     recentWords: [],
     insights: ["'b' and 'd' words are tricky. Let's practise a few more."],
     streak: { days: 3, lastDay: dayKey(now) },
-    stars: { detective: 2, sound: 3, builder: 3 },
+    stars: { detective: 2, sound: 3, builder: 3, speller: 0 },
     weekSnapshot: { date: weekAgo.toISOString(), mastery: WEEK_AGO },
     recommended: 'builder',
   };

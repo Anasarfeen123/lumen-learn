@@ -69,7 +69,7 @@ describe('profile storage', () => {
     expect(p.onboarded).toBe(true);
     expect(p.settings.sfx).toBe(false);
     expect(p.settings.font).toBe('lexend');
-    expect(p.gameLevels).toEqual({ detective: 5, sound: 1, builder: 1 });
+    expect(p.gameLevels).toEqual({ detective: 5, sound: 1, builder: 1, speller: 1 });
   });
   it('survives garbage', () => {
     expect(migrate('nonsense').xp).toBe(0);

@@ -9,7 +9,7 @@ import type { Mastery } from './types';
 
 const fresh = (over: Partial<LearnerState> = {}): LearnerState => ({
   mastery: {},
-  gameLevels: { detective: 1, sound: 1, builder: 1 },
+  gameLevels: { detective: 1, sound: 1, builder: 1, speller: 1 },
   recentWords: [],
   ...over,
 });
@@ -63,7 +63,7 @@ describe('pickRound', () => {
     for (let seed = 1; seed < 40; seed++) {
       for (const game of ['detective', 'sound', 'builder'] as const) {
         for (let L = 1; L <= 5; L++) {
-          const state = fresh({ gameLevels: { detective: L, sound: L, builder: L } });
+          const state = fresh({ gameLevels: { detective: L, sound: L, builder: L, speller: 1 } });
           const round = pickRound(state, BANK, game, seeded(seed));
           expect(round).toHaveLength(5);
           expect(new Set(round.map((w) => w.id)).size).toBe(5);
@@ -75,7 +75,7 @@ describe('pickRound', () => {
 
   it('avoids recently served words when it can', () => {
     const recent = ['hand', 'frog', 'star', 'boat', 'rain', 'moon', 'duck', 'cat'];
-    const state = fresh({ gameLevels: { detective: 2, sound: 2, builder: 2 }, recentWords: recent });
+    const state = fresh({ gameLevels: { detective: 2, sound: 2, builder: 2, speller: 1 }, recentWords: recent });
     for (let seed = 1; seed < 20; seed++) {
       const round = pickRound(state, BANK, 'builder', seeded(seed));
       // 14 words in band, 8 recent: the 6 fresh ones are enough for the first 5 picks.
@@ -105,7 +105,7 @@ describe('pickRound', () => {
     let confusable = 0;
     let total = 0;
     for (let seed = 1; seed < 200; seed++) {
-      const round = pickRound(fresh({ mastery, gameLevels: { detective: 2, sound: 2, builder: 2 } }), BANK, 'builder', seeded(seed));
+      const round = pickRound(fresh({ mastery, gameLevels: { detective: 2, sound: 2, builder: 2, speller: 1 } }), BANK, 'builder', seeded(seed));
       for (const w of round.slice(1, 4)) {
         total++;
         if (w.tags.includes('confusable')) confusable++;
@@ -123,7 +123,7 @@ describe('rescue rule', () => {
   });
 
   it('draws from one level lower without changing the stored level', () => {
-    const state = fresh({ gameLevels: { detective: 3, sound: 3, builder: 3 } });
+    const state = fresh({ gameLevels: { detective: 3, sound: 3, builder: 3, speller: 1 } });
     const w = rescueItem(state, BANK, 'detective', [], seeded(9))!;
     expect([1, 2]).toContain(w.level);
     expect(state.gameLevels.detective).toBe(3);

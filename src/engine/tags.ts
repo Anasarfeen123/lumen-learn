@@ -43,7 +43,7 @@ export const GAME_FOR_TAG: Record<Tag, GameId> = {
   'vowel-team': 'sound',
   blend: 'sound',
   long: 'builder',
-  multi: 'builder',
+  multi: 'speller',
   medium: 'builder',
   short: 'builder',
 };
@@ -51,7 +51,8 @@ export const GAME_FOR_TAG: Record<Tag, GameId> = {
 export const SKILLS: { label: string; tags: Tag[] }[] = [
   { label: 'Word recognition', tags: ['irregular', 'confusable', 'silent'] },
   { label: 'Listening for sounds', tags: ['digraph', 'vowel-team', 'blend'] },
-  { label: 'Spelling and order', tags: ['short', 'medium', 'long', 'multi'] },
+  { label: 'Spelling and order', tags: ['short', 'medium', 'long'] },
+  { label: 'Breaking words into beats', tags: ['multi'] },
 ];
 
 /** Sentence-case a phrase. A leading quoted letter ('b' and 'd' words) is left alone. */

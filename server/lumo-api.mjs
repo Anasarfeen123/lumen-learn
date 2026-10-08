@@ -5,11 +5,12 @@
 //   POST /api/lumo/insight  { template, context }  -> { text }
 //   POST /api/lumo/summary  { stats }              -> { text }
 //
-// Requires ANTHROPIC_API_KEY. Without it, both routes answer 503 and the app
-// uses its built-in templates.
+// Uses Groq (OpenAI-compatible chat completions). Requires GROQ_API_KEY; the
+// key stays on the server. Without it, both routes answer 204 (no content)
+// and the app quietly uses its built-in templates.
 
-const API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = process.env.LUMEN_MODEL || 'claude-haiku-4-5-20251001';
+const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 const MAX_BODY = 8 * 1024;
 
 const INSIGHT_BANNED = ['wrong', 'bad', 'fail', 'easy', 'dyslexia', 'disorder', 'test', 'score', 'problem'];
@@ -54,19 +55,23 @@ async function callModel(system, user, timeoutMs) {
     signal: AbortSignal.timeout(timeoutMs),
     headers: {
       'content-type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
+      authorization: `Bearer ${process.env.GROQ_API_KEY}`,
     },
     body: JSON.stringify({
       model: MODEL,
       max_tokens: 300,
-      system,
-      messages: [{ role: 'user', content: user }],
+      temperature: 0.6,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
     }),
   });
   if (!res.ok) throw new Error(`Model call failed: ${res.status}`);
   const data = await res.json();
-  return (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
+  const text = data.choices?.[0]?.message?.content ?? '';
+  // Models sometimes wrap a single sentence in quotes.
+  return text.trim().replace(/^["“](.*)["”]$/s, '$1').trim();
 }
 
 function readJson(req) {
@@ -97,7 +102,10 @@ export async function lumoApi(req, res, next) {
   const url = (req.url || '').split('?')[0];
   if (!url.startsWith('/api/lumo/')) return next ? next() : send(res, 404, { error: 'not found' });
   if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
-  if (!process.env.ANTHROPIC_API_KEY) return send(res, 503, { error: 'AI not configured' });
+  if (!process.env.GROQ_API_KEY) {
+    res.statusCode = 204;
+    return res.end();
+  }
 
   try {
     const body = await readJson(req);

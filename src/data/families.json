@@ -1,0 +1,579 @@
+[
+  {
+    "id": "tion",
+    "label": "words that end in -tion",
+    "given": "tion",
+    "words": [
+      {
+        "word": "nation",
+        "syllables": [
+          "na",
+          "tion"
+        ],
+        "level": 1,
+        "tags": [
+          "medium",
+          "multi"
+        ]
+      },
+      {
+        "word": "motion",
+        "syllables": [
+          "mo",
+          "tion"
+        ],
+        "level": 1,
+        "tags": [
+          "medium",
+          "multi"
+        ]
+      },
+      {
+        "word": "action",
+        "syllables": [
+          "ac",
+          "tion"
+        ],
+        "level": 1,
+        "tags": [
+          "medium",
+          "multi"
+        ]
+      },
+      {
+        "word": "lotion",
+        "syllables": [
+          "lo",
+          "tion"
+        ],
+        "level": 2,
+        "tags": [
+          "medium",
+          "multi"
+        ]
+      },
+      {
+        "word": "station",
+        "syllables": [
+          "sta",
+          "tion"
+        ],
+        "level": 2,
+        "tags": [
+          "long",
+          "multi",
+          "blend"
+        ]
+      },
+      {
+        "word": "fraction",
+        "syllables": [
+          "frac",
+          "tion"
+        ],
+        "level": 2,
+        "tags": [
+          "long",
+          "multi",
+          "blend"
+        ]
+      },
+      {
+        "word": "reaction",
+        "syllables": [
+          "re",
+          "ac",
+          "tion"
+        ],
+        "level": 3,
+        "tags": [
+          "long",
+          "multi"
+        ]
+      },
+      {
+        "word": "election",
+        "syllables": [
+          "e",
+          "lec",
+          "tion"
+        ],
+        "level": 3,
+        "tags": [
+          "long",
+          "multi"
+        ]
+      },
+      {
+        "word": "vacation",
+        "syllables": [
+          "va",
+          "ca",
+          "tion"
+        ],
+        "level": 3,
+        "tags": [
+          "long",
+          "multi"
+        ]
+      },
+      {
+        "word": "addition",
+        "syllables": [
+          "ad",
+          "di",
+          "tion"
+        ],
+        "level": 4,
+        "tags": [
+          "long",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "invention",
+        "syllables": [
+          "in",
+          "ven",
+          "tion"
+        ],
+        "level": 4,
+        "tags": [
+          "long",
+          "multi"
+        ]
+      },
+      {
+        "word": "direction",
+        "syllables": [
+          "di",
+          "rec",
+          "tion"
+        ],
+        "level": 5,
+        "tags": [
+          "long",
+          "multi",
+          "confusable"
+        ],
+        "say": [
+          "dih",
+          "reck",
+          "shun"
+        ]
+      },
+      {
+        "word": "population",
+        "syllables": [
+          "pop",
+          "u",
+          "la",
+          "tion"
+        ],
+        "level": 5,
+        "tags": [
+          "long",
+          "multi",
+          "confusable"
+        ],
+        "say": [
+          "pop",
+          "you",
+          "lay",
+          "shun"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ture",
+    "label": "words that end in -ture",
+    "given": "ture",
+    "words": [
+      {
+        "word": "nature",
+        "syllables": [
+          "na",
+          "ture"
+        ],
+        "level": 1,
+        "tags": [
+          "medium",
+          "multi"
+        ]
+      },
+      {
+        "word": "future",
+        "syllables": [
+          "fu",
+          "ture"
+        ],
+        "level": 1,
+        "tags": [
+          "medium",
+          "multi"
+        ]
+      },
+      {
+        "word": "picture",
+        "syllables": [
+          "pic",
+          "ture"
+        ],
+        "level": 2,
+        "tags": [
+          "long",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "capture",
+        "syllables": [
+          "cap",
+          "ture"
+        ],
+        "level": 2,
+        "tags": [
+          "long",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "mixture",
+        "syllables": [
+          "mix",
+          "ture"
+        ],
+        "level": 2,
+        "tags": [
+          "long",
+          "multi"
+        ]
+      },
+      {
+        "word": "creature",
+        "syllables": [
+          "crea",
+          "ture"
+        ],
+        "level": 3,
+        "tags": [
+          "long",
+          "multi",
+          "vowel-team",
+          "blend"
+        ]
+      },
+      {
+        "word": "adventure",
+        "syllables": [
+          "ad",
+          "ven",
+          "ture"
+        ],
+        "level": 4,
+        "tags": [
+          "long",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "furniture",
+        "syllables": [
+          "fur",
+          "ni",
+          "ture"
+        ],
+        "level": 4,
+        "tags": [
+          "long",
+          "multi"
+        ]
+      },
+      {
+        "word": "signature",
+        "syllables": [
+          "sig",
+          "na",
+          "ture"
+        ],
+        "level": 5,
+        "tags": [
+          "long",
+          "multi"
+        ],
+        "say": [
+          "sig",
+          "nuh",
+          "cher"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ble",
+    "label": "words that end in -ble",
+    "given": "ble",
+    "words": [
+      {
+        "word": "table",
+        "syllables": [
+          "ta",
+          "ble"
+        ],
+        "level": 1,
+        "tags": [
+          "medium",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "cable",
+        "syllables": [
+          "ca",
+          "ble"
+        ],
+        "level": 1,
+        "tags": [
+          "medium",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "bubble",
+        "syllables": [
+          "bub",
+          "ble"
+        ],
+        "level": 2,
+        "tags": [
+          "medium",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "marble",
+        "syllables": [
+          "mar",
+          "ble"
+        ],
+        "level": 2,
+        "tags": [
+          "medium",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "tumble",
+        "syllables": [
+          "tum",
+          "ble"
+        ],
+        "level": 2,
+        "tags": [
+          "medium",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "grumble",
+        "syllables": [
+          "grum",
+          "ble"
+        ],
+        "level": 3,
+        "tags": [
+          "long",
+          "multi",
+          "confusable",
+          "blend"
+        ]
+      },
+      {
+        "word": "possible",
+        "syllables": [
+          "pos",
+          "si",
+          "ble"
+        ],
+        "level": 4,
+        "tags": [
+          "long",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "terrible",
+        "syllables": [
+          "ter",
+          "ri",
+          "ble"
+        ],
+        "level": 4,
+        "tags": [
+          "long",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "comfortable",
+        "syllables": [
+          "com",
+          "fort",
+          "a",
+          "ble"
+        ],
+        "level": 5,
+        "tags": [
+          "long",
+          "multi",
+          "confusable"
+        ],
+        "say": [
+          "cum",
+          "fert",
+          "uh",
+          "bull"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "closed",
+    "label": "words made of closed syllables",
+    "given": null,
+    "words": [
+      {
+        "word": "sunset",
+        "syllables": [
+          "sun",
+          "set"
+        ],
+        "level": 1,
+        "tags": [
+          "medium",
+          "multi"
+        ]
+      },
+      {
+        "word": "napkin",
+        "syllables": [
+          "nap",
+          "kin"
+        ],
+        "level": 1,
+        "tags": [
+          "medium",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "picnic",
+        "syllables": [
+          "pic",
+          "nic"
+        ],
+        "level": 2,
+        "tags": [
+          "medium",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "magnet",
+        "syllables": [
+          "mag",
+          "net"
+        ],
+        "level": 2,
+        "tags": [
+          "medium",
+          "multi"
+        ]
+      },
+      {
+        "word": "basket",
+        "syllables": [
+          "bas",
+          "ket"
+        ],
+        "level": 2,
+        "tags": [
+          "medium",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "kitten",
+        "syllables": [
+          "kit",
+          "ten"
+        ],
+        "level": 3,
+        "tags": [
+          "medium",
+          "multi"
+        ]
+      },
+      {
+        "word": "dentist",
+        "syllables": [
+          "den",
+          "tist"
+        ],
+        "level": 3,
+        "tags": [
+          "long",
+          "multi",
+          "confusable"
+        ]
+      },
+      {
+        "word": "fantastic",
+        "syllables": [
+          "fan",
+          "tas",
+          "tic"
+        ],
+        "level": 4,
+        "tags": [
+          "long",
+          "multi"
+        ]
+      },
+      {
+        "word": "invented",
+        "syllables": [
+          "in",
+          "vent",
+          "ed"
+        ],
+        "level": 5,
+        "tags": [
+          "long",
+          "multi",
+          "confusable"
+        ],
+        "say": [
+          "in",
+          "vent",
+          "id"
+        ]
+      }
+    ]
+  }
+]

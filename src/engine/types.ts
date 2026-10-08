@@ -1,5 +1,5 @@
-export type GameId = 'detective' | 'sound' | 'builder';
-export const GAMES: GameId[] = ['detective', 'sound', 'builder'];
+export type GameId = 'detective' | 'sound' | 'builder' | 'speller';
+export const GAMES: GameId[] = ['detective', 'sound', 'builder', 'speller'];
 
 export type Tag =
   | 'short'
@@ -24,6 +24,8 @@ export interface Word {
   picture: string | null;
   misspellings: string[];
   soundAlikes: string[];
+  /** Syllable Speller word family (-tion, -ture...), for family words only. */
+  family?: string;
 }
 
 export interface TagMastery {

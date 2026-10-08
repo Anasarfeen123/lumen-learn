@@ -1,6 +1,6 @@
 ---
 name: lumen-learning-game
-description: Build, extend or pitch Lumen, an adaptive literacy game for dyslexic learners guided by the mascot Lumo. Use when designing screens, writing game logic, adding words, writing Lumo's lines, or prompting ThinkRoot to build any part of the app.
+description: Build, extend or pitch Lumen, an adaptive literacy game for dyslexic learners guided by the mascot Lumo. Use when designing screens, writing game logic, adding words, writing Lumo's lines.
 ---
 
 # Lumen: Learn differently
@@ -15,7 +15,7 @@ Lumen is a playful, adaptive literacy game designed for learners with dyslexia a
 - Lumo, a cream-yellow firefly with a navy cape, drawn in crayon in 9 poses (transparent PNGs in `assets/lumo/`)
 - Lexend for every word the child reads; the decoration wobbles, the words never do
 
-Details are in `references/07-design-system.md` ("Current look") and `references/02-mascot-lumo.md`.
+Details are in `07-design-system.md` ("Current look") and `02-mascot-lumo.md`.
 
 **What Lumen is not:** a dyslexia test, a diagnosis, or a treatment. It is practice. Never claim it "fixes" or "cures" anything, in the app or in the pitch.
 
@@ -34,15 +34,15 @@ Read only the files the current task needs.
 
 | File | Read it when you are... |
 |---|---|
-| `references/01-product-spec.md` | Building screens, navigation, data storage, or anything app-wide |
-| `references/02-mascot-lumo.md` | Drawing Lumo, animating it, or writing anything Lumo says |
-| `references/03-games.md` | Building or changing Word Detective, Sound Match, Word Builder, or the stretch games |
-| `references/04-adaptive-engine.md` | Writing difficulty, word selection, mastery tracking, or "Lumo noticed" insights |
-| `references/05-progression.md` | Building XP, stars, glow stages, unlockables, or streaks |
-| `references/06-grown-up-view.md` | Building the parent and teacher summary |
-| `references/07-design-system.md` | Styling anything: colors, type, tiles, feedback, motion, sound |
-| `references/08-word-bank.md` | Adding or editing words, misspellings, sound-alikes, or pictures |
-| `references/09-thinkroot-build.md` | Prompting ThinkRoot, planning the 6 hours, or rehearsing the demo |
+| `01-product-spec.md` | Building screens, navigation, data storage, or anything app-wide |
+| `02-mascot-lumo.md` | Drawing Lumo, animating it, or writing anything Lumo says |
+| `03-games.md` | Building or changing Word Detective, Sound Match, Word Builder, or the stretch games |
+| `04-adaptive-engine.md` | Writing difficulty, word selection, mastery tracking, or "Lumo noticed" insights |
+| `05-progression.md` | Building XP, stars, glow stages, unlockables, or streaks |
+| `06-grown-up-view.md` | Building the parent and teacher summary |
+| `07-design-system.md` | Styling anything: colors, type, tiles, feedback, motion, sound |
+| `08-word-bank.md` | Adding or editing words, misspellings, sound-alikes, or pictures |
+| `../demo.md` | Rehearsing the demo or preparing for judges' questions |
 
 ## Non-negotiable rules
 

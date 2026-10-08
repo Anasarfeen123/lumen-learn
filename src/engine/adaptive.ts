@@ -40,6 +40,7 @@ export function weakness(mastery: Mastery, word: Word): number {
 export function eligible(word: Word, game: GameId): boolean {
   if (game === 'detective') return word.misspellings.length >= 2;
   if (game === 'sound') return word.soundAlikes.length >= 2;
+  if (game === 'speller') return Boolean(word.family);
   return true;
 }
 
