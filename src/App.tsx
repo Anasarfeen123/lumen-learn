@@ -22,6 +22,7 @@ import { isGame, type RoundMode, type RoundSummary } from './engine/session';
 import type { RoundItem } from './engine/practice';
 import { ShortcutsHelp } from './components/Shortcuts';
 import { SoundNotice } from './components/SoundNotice';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const MODES: RoundMode[] = ['detective', 'sound', 'builder', 'speller', 'mixed', 'review', 'milestone'];
 
@@ -123,7 +124,7 @@ export function App() {
       <a className="skip-link" href="#main">Skip to content</a>
       <WobbleDefs />
       <Shell bare={bare}>
-        <div className="route" key={location.key}>{node}</div>
+        <div className="route" key={location.key}><ErrorBoundary>{node}</ErrorBoundary></div>
       </Shell>
       <ShortcutsHelp />
       <SoundNotice />

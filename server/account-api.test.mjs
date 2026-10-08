@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { EventEmitter } from 'node:events';
+import { Readable } from 'node:stream';
 import { accountApi, hashPassword, verifyPassword } from './account-api.mjs';
 import { resetDbForTests } from './db.mjs';
 
@@ -7,8 +7,9 @@ import { resetDbForTests } from './db.mjs';
 function client() {
   let cookie = '';
   return async function call(method, url, body, { header = true } = {}) {
-    const req = new EventEmitter();
-    Object.assign(req, { method, url, destroy() {}, socket: { remoteAddress: '1.2.3.4' }, headers: { cookie, ...(header ? { 'x-lumen': '1' } : {}) } });
+    // A real stream, like an HTTP request: the body waits until the server reads it.
+    const req = Readable.from(body !== undefined ? [Buffer.from(JSON.stringify(body))] : []);
+    Object.assign(req, { method, url, socket: { remoteAddress: '1.2.3.4' }, headers: { cookie, ...(header ? { 'x-lumen': '1' } : {}) } });
     const res = await new Promise((resolve) => {
       const r = {
         statusCode: 200, headers: {},
@@ -16,7 +17,6 @@ function client() {
         end(data) { resolve({ status: this.statusCode, headers: this.headers, body: data && this.headers['content-type'] === 'application/json' ? JSON.parse(data) : data }); },
       };
       accountApi(req, r, () => resolve({ status: 'next' }));
-      queueMicrotask(() => { if (body !== undefined) req.emit('data', Buffer.from(JSON.stringify(body))); req.emit('end'); });
     });
     const set = res.headers['set-cookie'];
     if (set) cookie = set.split(';')[0].endsWith('=') ? '' : set.split(';')[0];

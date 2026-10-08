@@ -1,6 +1,7 @@
 // Prints a secret-free summary of the .env / AI setup when a server starts,
 // including whether the natural voice actually works with this key.
 import { lumoApi } from './lumo-api.mjs';
+import { db, dbKind } from './db.mjs';
 
 function call(path) {
   return new Promise((resolve) => {
@@ -16,6 +17,13 @@ function call(path) {
 export async function logSetup(env, log = console.log) {
   const where = env.found ? `.env loaded (${env.keys.length ? env.keys.join(', ') : 'no values set'})` : 'no .env file (copy .env.example to .env)';
   log(`  ${where}`);
+  try {
+    await db();
+    log(dbKind() === 'turso' ? '  Database: Turso (hosted) — accounts are kept safely' : `  Database: local file ${process.env.LUMEN_DB || 'data/lumen.db'}`);
+    if (dbKind() === 'file' && process.env.RENDER) log('  WARNING: no TURSO_DATABASE_URL on Render — accounts will be lost when the server restarts');
+  } catch (e) {
+    log(`  Database: NOT reachable (${String(e.message || e).slice(0, 120)}) — check TURSO_DATABASE_URL / TURSO_AUTH_TOKEN`);
+  }
   if (!process.env.GROQ_API_KEY && !process.env.FISH_API_KEY && !process.env.GOOGLE_TTS_API_KEY && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     log("  Lumo's AI: off — add GROQ_API_KEY (tips) and GOOGLE_TTS_API_KEY (natural voice) to .env");
     return;

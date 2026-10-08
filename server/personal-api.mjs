@@ -11,7 +11,7 @@
 import { randomBytes } from 'node:crypto';
 import { chatJson } from './lumo-api.mjs';
 import { currentUser } from './account-api.mjs';
-import { openDb, now } from './db.mjs';
+import { now, one, run } from './db.mjs';
 
 export const INTERESTS = {
   animals: 'animals and pets', space: 'space and planets', dinosaurs: 'dinosaurs', ocean: 'the ocean and sea creatures',
@@ -218,20 +218,20 @@ export async function personalApi(req, res, next) {
         topic: interest, level, cover: COVER[interest] ?? 'stack of books',
         pages: toPages(check.sentences), focusWords: check.used, createdAt: now(), feeling: null,
       };
-      const user = currentUser(req);
-      if (user) openDb().prepare('INSERT INTO stories (id, user_id, data, created_at) VALUES (?, ?, ?, ?)').run(story.id, user.id, JSON.stringify(story), story.createdAt);
+      const user = await currentUser(req);
+      if (user) await run('INSERT INTO stories (id, user_id, data, created_at) VALUES (?, ?, ?, ?)', story.id, user.id, JSON.stringify(story), story.createdAt);
       return send(res, 200, { story, saved: Boolean(user) });
     }
 
     const fb = path.match(/^\/api\/personal\/story\/([\w-]+)\/feedback$/);
     if (fb) {
       const feeling = ['loved', 'ok', 'not-for-me'].includes(body.feeling) ? body.feeling : null;
-      const user = currentUser(req);
+      const user = await currentUser(req);
       if (!user) return send(res, 204);
-      const row = openDb().prepare('SELECT data FROM stories WHERE id = ? AND user_id = ?').get(fb[1], user.id);
+      const row = await one('SELECT data FROM stories WHERE id = ? AND user_id = ?', fb[1], user.id);
       if (!row) return send(res, 404, { error: 'not found' });
       const data = { ...JSON.parse(row.data), feeling };
-      openDb().prepare('UPDATE stories SET data = ? WHERE id = ? AND user_id = ?').run(JSON.stringify(data), fb[1], user.id);
+      await run('UPDATE stories SET data = ? WHERE id = ? AND user_id = ?', JSON.stringify(data), fb[1], user.id);
       return send(res, 204);
     }
 

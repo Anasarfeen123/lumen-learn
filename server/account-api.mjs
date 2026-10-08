@@ -22,7 +22,7 @@
 // rate-limited; every data query is scoped to the signed-in user.
 import { createHash, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
-import { openDb, now } from './db.mjs';
+import { all, batch, now, one, run, USER_TABLES } from './db.mjs';
 
 const scryptAsync = promisify(scrypt);
 const COOKIE = 'lumen_session';
@@ -89,20 +89,20 @@ function setSessionCookie(req, res, token, maxAgeSeconds) {
 
 const publicUser = (u) => ({ id: u.id, email: u.email, name: u.display_name, createdAt: u.created_at });
 
-function createSession(userId) {
+async function createSession(userId) {
   const token = id(32);
   const expires = new Date(Date.now() + SESSION_DAYS * 86400_000).toISOString();
-  openDb().prepare('INSERT INTO sessions (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)').run(sha256(token), userId, now(), expires);
+  await run('INSERT INTO sessions (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)', sha256(token), userId, now(), expires);
   return token;
 }
 
 /** The signed-in user for this request, or null. */
-export function currentUser(req) {
+export async function currentUser(req) {
   const token = cookies(req)[COOKIE];
   if (!token) return null;
-  const row = openDb().prepare(`
+  const row = await one(`
     SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id
-    WHERE s.token_hash = ? AND s.expires_at > ?`).get(sha256(token), now());
+    WHERE s.token_hash = ? AND s.expires_at > ?`, sha256(token), now());
   return row ?? null;
 }
 
@@ -132,18 +132,18 @@ async function signup(req, res) {
   const name = String(body.name ?? '').trim().slice(0, 40);
   if (!EMAIL.test(email)) return send(res, 400, { error: 'Please enter a real email address.' });
   if (password.length < 8) return send(res, 400, { error: 'Please use a password of at least 8 characters.' });
-  const db = openDb();
-  if (db.prepare('SELECT 1 FROM users WHERE email = ?').get(email)) return send(res, 409, { error: 'There is already an account with that email. Try logging in.' });
+  if (await one('SELECT 1 AS x FROM users WHERE email = ?', email)) return send(res, 409, { error: 'There is already an account with that email. Try logging in.' });
   const user = { id: id(), email, password_hash: await hashPassword(password), display_name: name, created_at: now() };
-  db.prepare('INSERT INTO users (id, email, password_hash, display_name, created_at) VALUES (?, ?, ?, ?, ?)').run(user.id, user.email, user.password_hash, user.display_name, user.created_at);
+  const writes = [['INSERT INTO users (id, email, password_hash, display_name, created_at) VALUES (?, ?, ?, ?, ?)', user.id, user.email, user.password_hash, user.display_name, user.created_at]];
   // Keep the progress made as a guest, if the learner chose to.
   if (body.profile && typeof body.profile === 'object') {
-    db.prepare('INSERT INTO profiles (user_id, data, version, updated_at) VALUES (?, ?, 1, ?)').run(user.id, JSON.stringify(body.profile), now());
+    writes.push(['INSERT INTO profiles (user_id, data, version, updated_at) VALUES (?, ?, 1, ?)', user.id, JSON.stringify(body.profile), now()]);
   }
   if (body.library && typeof body.library === 'object') {
-    db.prepare('INSERT INTO library_progress (user_id, data, updated_at) VALUES (?, ?, ?)').run(user.id, JSON.stringify(body.library), now());
+    writes.push(['INSERT INTO library_progress (user_id, data, updated_at) VALUES (?, ?, ?)', user.id, JSON.stringify(body.library), now()]);
   }
-  setSessionCookie(req, res, createSession(user.id), SESSION_DAYS * 86400);
+  await batch(writes);
+  setSessionCookie(req, res, await createSession(user.id), SESSION_DAYS * 86400);
   return send(res, 201, { user: publicUser(user) });
 }
 
@@ -152,48 +152,53 @@ async function login(req, res) {
   const email = String(body.email ?? '').trim().toLowerCase();
   const key = `${email}|${clientIp(req)}`;
   if (tooManyAttempts(key)) return send(res, 429, { error: 'Too many tries. Please wait a few minutes and try again.' });
-  const user = openDb().prepare('SELECT * FROM users WHERE email = ?').get(email);
+  const user = await one('SELECT * FROM users WHERE email = ?', email);
   // Same message whether the email or the password was wrong.
   if (!user || !(await verifyPassword(String(body.password ?? ''), user.password_hash))) {
     noteAttempt(key);
     return send(res, 401, { error: "That email and password don't match." });
   }
   attempts.delete(key);
-  setSessionCookie(req, res, createSession(user.id), SESSION_DAYS * 86400);
+  setSessionCookie(req, res, await createSession(user.id), SESSION_DAYS * 86400);
   return send(res, 200, { user: publicUser(user) });
 }
 
-function logout(req, res) {
+async function logout(req, res) {
   const token = cookies(req)[COOKIE];
-  if (token) openDb().prepare('DELETE FROM sessions WHERE token_hash = ?').run(sha256(token));
+  if (token) await run('DELETE FROM sessions WHERE token_hash = ?', sha256(token));
   setSessionCookie(req, res, '', 0);
   return send(res, 204);
 }
 
 function getJsonRow(table, userId) {
-  return openDb().prepare(`SELECT * FROM ${table} WHERE user_id = ?`).get(userId);
+  return one(`SELECT * FROM ${table} WHERE user_id = ?`, userId);
 }
 
 async function putProfile(req, res, user) {
   const body = await readBody(req, MAX_JSON);
   if (!body.data || typeof body.data !== 'object') return send(res, 400, { error: 'data required' });
-  const db = openDb();
-  const row = getJsonRow('profiles', user.id);
+  const row = await getJsonRow('profiles', user.id);
   // Optimistic concurrency: a save based on an old version is refused, so two devices can't silently overwrite each other.
   if (row && Number.isInteger(body.version) && body.version !== row.version) {
     return send(res, 409, { error: 'conflict', data: JSON.parse(row.data), version: row.version });
   }
   const version = (row?.version ?? 0) + 1;
-  if (row) db.prepare('UPDATE profiles SET data = ?, version = ?, updated_at = ? WHERE user_id = ?').run(JSON.stringify(body.data), version, now(), user.id);
-  else db.prepare('INSERT INTO profiles (user_id, data, version, updated_at) VALUES (?, ?, ?, ?)').run(user.id, JSON.stringify(body.data), version, now());
+  if (row) {
+    // Only succeeds if nobody else saved in between (the version is still the one we read).
+    const r = await run('UPDATE profiles SET data = ?, version = ?, updated_at = ? WHERE user_id = ? AND version = ?', JSON.stringify(body.data), version, now(), user.id, row.version);
+    if (!r.rowsAffected) {
+      const fresh = await getJsonRow('profiles', user.id);
+      return send(res, 409, { error: 'conflict', data: JSON.parse(fresh.data), version: fresh.version });
+    }
+  } else await run('INSERT INTO profiles (user_id, data, version, updated_at) VALUES (?, ?, ?, ?)', user.id, JSON.stringify(body.data), version, now());
   return send(res, 200, { version });
 }
 
 async function putSimple(req, res, user, table) {
   const body = await readBody(req, MAX_JSON);
   if (!body.data || typeof body.data !== 'object') return send(res, 400, { error: 'data required' });
-  openDb().prepare(`INSERT INTO ${table} (user_id, data, updated_at) VALUES (?, ?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`).run(user.id, JSON.stringify(body.data), now());
+  await run(`INSERT INTO ${table} (user_id, data, updated_at) VALUES (?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`, user.id, JSON.stringify(body.data), now());
   return send(res, 200, { ok: true });
 }
 
@@ -204,11 +209,10 @@ const uploadMeta = (r) => ({
 });
 
 async function uploadsApi(req, res, user, rest) {
-  const db = openDb();
   const [uploadId, sub] = rest;
   if (!uploadId) {
     if (req.method === 'GET') {
-      const rows = db.prepare('SELECT id, name, kind, mime, size, mode, raw, confirmed, created_at, updated_at, file IS NOT NULL AS has_file FROM uploads WHERE user_id = ? ORDER BY updated_at DESC').all(user.id);
+      const rows = await all('SELECT id, name, kind, mime, size, mode, raw, confirmed, created_at, updated_at, file IS NOT NULL AS has_file FROM uploads WHERE user_id = ? ORDER BY updated_at DESC', user.id);
       return send(res, 200, { uploads: rows.map(uploadMeta) });
     }
     if (req.method === 'POST') {
@@ -218,15 +222,15 @@ async function uploadsApi(req, res, user, rest) {
       if (!kind) return send(res, 400, { error: 'kind required' });
       const file = b.fileBase64 ? Buffer.from(String(b.fileBase64), 'base64') : null;
       const row = { id: id(), name, kind, mime: String(b.mime ?? 'text/plain').slice(0, 60), size: Number(b.size) || file?.length || 0 };
-      db.prepare(`INSERT INTO uploads (id, user_id, name, kind, mime, size, file, raw, confirmed, mode, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(row.id, user.id, row.name, row.kind, row.mime, row.size, file,
+      await run(`INSERT INTO uploads (id, user_id, name, kind, mime, size, file, raw, confirmed, mode, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, row.id, user.id, row.name, row.kind, row.mime, row.size, file,
         b.raw ? JSON.stringify(b.raw) : null, typeof b.confirmed === 'string' ? b.confirmed : null, b.mode ?? null, now(), now());
-      return send(res, 201, { upload: uploadMeta(db.prepare('SELECT *, file IS NOT NULL AS has_file FROM uploads WHERE id = ?').get(row.id)) });
+      return send(res, 201, { upload: uploadMeta(await one('SELECT *, file IS NOT NULL AS has_file FROM uploads WHERE id = ?', row.id)) });
     }
     return send(res, 405, { error: 'method' });
   }
   // Ownership check on every single-upload request.
-  const row = db.prepare('SELECT *, file IS NOT NULL AS has_file FROM uploads WHERE id = ? AND user_id = ?').get(uploadId, user.id);
+  const row = await one('SELECT *, file IS NOT NULL AS has_file FROM uploads WHERE id = ? AND user_id = ?', uploadId, user.id);
   if (!row) return send(res, 404, { error: 'not found' });
   if (sub === 'file') {
     if (!row.file) return send(res, 404, { error: 'no file' });
@@ -238,15 +242,15 @@ async function uploadsApi(req, res, user, rest) {
   if (req.method === 'GET') return send(res, 200, { upload: uploadMeta(row) });
   if (req.method === 'PUT') {
     const b = await readBody(req, MAX_JSON);
-    db.prepare('UPDATE uploads SET name = ?, confirmed = ?, raw = ?, updated_at = ? WHERE id = ? AND user_id = ?').run(
+    await run('UPDATE uploads SET name = ?, confirmed = ?, raw = ?, updated_at = ? WHERE id = ? AND user_id = ?',
       typeof b.name === 'string' ? b.name.slice(0, 80) : row.name,
       typeof b.confirmed === 'string' ? b.confirmed : row.confirmed,
       b.raw ? JSON.stringify(b.raw) : row.raw,
       now(), row.id, user.id);
-    return send(res, 200, { upload: uploadMeta(db.prepare('SELECT *, file IS NOT NULL AS has_file FROM uploads WHERE id = ?').get(row.id)) });
+    return send(res, 200, { upload: uploadMeta(await one('SELECT *, file IS NOT NULL AS has_file FROM uploads WHERE id = ?', row.id)) });
   }
   if (req.method === 'DELETE') {
-    db.prepare('DELETE FROM uploads WHERE id = ? AND user_id = ?').run(row.id, user.id);
+    await run('DELETE FROM uploads WHERE id = ? AND user_id = ?', row.id, user.id);
     return send(res, 204);
   }
   return send(res, 405, { error: 'method' });
@@ -264,15 +268,16 @@ export async function accountApi(req, res, next) {
 
     if (path === '/api/auth/signup' && req.method === 'POST') return await signup(req, res);
     if (path === '/api/auth/login' && req.method === 'POST') return await login(req, res);
-    if (path === '/api/auth/logout' && req.method === 'POST') return logout(req, res);
+    if (path === '/api/auth/logout' && req.method === 'POST') return await logout(req, res);
 
-    const user = currentUser(req);
+    const user = await currentUser(req);
     // Signed out isn't an error here: the page just asks who is using it.
     if (path === '/api/auth/me') return send(res, 200, { user: user ? publicUser(user) : null });
     if (!user) return send(res, 401, { error: 'not signed in' });
 
     if (path === '/api/account' && req.method === 'DELETE') {
-      openDb().prepare('DELETE FROM users WHERE id = ?').run(user.id); // cascades to every table
+      // Every table explicitly, then the user: nothing is left behind even without cascades.
+      await batch([...USER_TABLES.map((t) => [`DELETE FROM ${t} WHERE user_id = ?`, user.id]), ['DELETE FROM users WHERE id = ?', user.id]]);
       setSessionCookie(req, res, '', 0);
       return send(res, 204);
     }
@@ -281,7 +286,7 @@ export async function accountApi(req, res, next) {
     const [what, ...rest] = parts;
     if (what === 'profile') {
       if (req.method === 'GET') {
-        const row = getJsonRow('profiles', user.id);
+        const row = await getJsonRow('profiles', user.id);
         return send(res, 200, row ? { data: JSON.parse(row.data), version: row.version } : { data: null, version: 0 });
       }
       if (req.method === 'PUT') return await putProfile(req, res, user);
@@ -289,18 +294,18 @@ export async function accountApi(req, res, next) {
     if (what === 'library' || what === 'personal') {
       const table = what === 'library' ? 'library_progress' : 'personalization';
       if (req.method === 'GET') {
-        const row = getJsonRow(table, user.id);
+        const row = await getJsonRow(table, user.id);
         return send(res, 200, { data: row ? JSON.parse(row.data) : null });
       }
       if (req.method === 'PUT') return await putSimple(req, res, user, table);
     }
     if (what === 'uploads') return await uploadsApi(req, res, user, rest);
     if (what === 'stories' && req.method === 'GET') {
-      const rows = openDb().prepare('SELECT data FROM stories WHERE user_id = ? ORDER BY created_at DESC LIMIT 50').all(user.id);
+      const rows = await all('SELECT data FROM stories WHERE user_id = ? ORDER BY created_at DESC LIMIT 50', user.id);
       return send(res, 200, { stories: rows.map((r) => JSON.parse(r.data)) });
     }
     if (what === 'stories' && rest[0] && req.method === 'DELETE') {
-      openDb().prepare('DELETE FROM stories WHERE id = ? AND user_id = ?').run(rest[0], user.id);
+      await run('DELETE FROM stories WHERE id = ? AND user_id = ?', rest[0], user.id);
       return send(res, 204);
     }
     return send(res, 404, { error: 'not found' });

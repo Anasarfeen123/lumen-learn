@@ -1,24 +1,19 @@
-// Lumen's database: a single SQLite file (Node's built-in node:sqlite, no
-// extra services). Set LUMEN_DB to choose the path (default data/lumen.db).
+// Lumen's database: SQLite through libSQL. The same code runs on a local file
+// (development, or a server with a disk) and on Turso's hosted database (free
+// hosting without a disk).
+//
+//   TURSO_DATABASE_URL=libsql://<db>-<org>.turso.io  + TURSO_AUTH_TOKEN=...   hosted
+//   LUMEN_DB=/path/to/lumen.db                                                local file (default data/lumen.db)
+//
 // Every query that touches a learner's data is scoped by user_id.
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-// node:sqlite prints an "experimental" warning once; it's stable enough for this use.
-const quiet = process.emitWarning;
-process.emitWarning = (w, ...rest) => (String(w).includes('SQLite') ? undefined : quiet.call(process, w, ...rest));
-const { DatabaseSync } = await import('node:sqlite');
-process.emitWarning = quiet;
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createClient } from '@libsql/client';
 
 const DEFAULT = fileURLToPath(new URL('../data/lumen.db', import.meta.url));
 
-let db = null;
-
 const SCHEMA = `
-PRAGMA journal_mode = WAL;
-PRAGMA foreign_keys = ON;
-
 CREATE TABLE IF NOT EXISTS users (
   id            TEXT PRIMARY KEY,
   email         TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -84,24 +79,69 @@ CREATE TABLE IF NOT EXISTS stories (
 CREATE INDEX IF NOT EXISTS stories_user ON stories(user_id);
 `;
 
-export function openDb(path = process.env.LUMEN_DB || DEFAULT) {
-  if (db) return db;
-  if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
-  db = new DatabaseSync(path);
-  db.exec(SCHEMA);
-  return db;
+/** Tables holding a learner's data, cleared explicitly on account deletion (a hosted DB may not enforce cascades). */
+export const USER_TABLES = ['sessions', 'profiles', 'library_progress', 'uploads', 'personalization', 'stories'];
+
+let client = null;
+let ready = null;
+
+function connect() {
+  if (process.env.TURSO_DATABASE_URL) return createClient({ url: process.env.TURSO_DATABASE_URL, authToken: process.env.TURSO_AUTH_TOKEN });
+  const path = process.env.LUMEN_DB || DEFAULT;
+  if (path === ':memory:') return createClient({ url: ':memory:' });
+  mkdirSync(dirname(path), { recursive: true });
+  return createClient({ url: pathToFileURL(path).href });
+}
+
+/** The database, with its tables created. */
+export async function db() {
+  if (!client) {
+    client = connect();
+    ready = (async () => {
+      if (!process.env.TURSO_DATABASE_URL) await client.execute('PRAGMA journal_mode = WAL').catch(() => {});
+      await client.execute('PRAGMA foreign_keys = ON').catch(() => {});
+      await client.executeMultiple(SCHEMA);
+    })();
+    ready.catch(() => { client = null; }); // let the next request retry
+  }
+  await ready;
+  return client;
+}
+
+export const dbKind = () => (process.env.TURSO_DATABASE_URL ? 'turso' : 'file');
+
+/** All rows. */
+export async function all(sql, ...args) {
+  return (await (await db()).execute({ sql, args })).rows;
+}
+
+/** The first row, or undefined. */
+export async function one(sql, ...args) {
+  return (await all(sql, ...args))[0];
+}
+
+/** Run a change. */
+export async function run(sql, ...args) {
+  return (await db()).execute({ sql, args });
+}
+
+/** Several changes at once, all or nothing. */
+export async function batch(statements) {
+  return (await db()).batch(statements.map(([sql, ...args]) => ({ sql, args })), 'write');
 }
 
 export function closeDb() {
-  db?.close();
-  db = null;
+  client?.close();
+  client = null;
+  ready = null;
 }
 
 /** For tests: a fresh in-memory database. */
-export function resetDbForTests() {
-  db?.close();
-  db = null;
-  return openDb(':memory:');
+export async function resetDbForTests() {
+  closeDb();
+  delete process.env.TURSO_DATABASE_URL;
+  process.env.LUMEN_DB = ':memory:';
+  return db();
 }
 
 export const now = () => new Date().toISOString();
