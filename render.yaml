@@ -5,6 +5,8 @@ services:
     name: lumen-learn
     runtime: docker
     plan: starter
+    region: singapore
+    autoDeploy: true
     healthCheckPath: /healthz
     envVars:
       - key: GROQ_API_KEY
