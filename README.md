@@ -13,7 +13,7 @@ Lumo, a little crayon firefly, cheers you on, helps when you're stuck, and never
 
 <p>
   <a href="https://github.com/Anasarfeen123/lumen-learn/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Anasarfeen123/lumen-learn/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="Unit tests" src="https://img.shields.io/badge/unit%20tests-207%20passing-2e8b57" />
+  <img alt="Unit tests" src="https://img.shields.io/badge/unit%20tests-209%20passing-2e8b57" />
   <img alt="Browser journeys" src="https://img.shields.io/badge/browser%20journeys-24%20passing-2e8b57" />
   <img alt="Deployed on Render" src="https://img.shields.io/badge/deployed%20on-Render-46e3b7?logo=render&logoColor=white" />
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-f2a65a" /></a>
@@ -87,7 +87,8 @@ Lumo, a little crayon firefly, cheers you on, helps when you're stuck, and never
 - **Playground**: Memory match, Slide puzzle, Pattern train, Word & picture match. Just for fun, so scores never count as learning.
 - **Progress**: lessons, stars, streaks, skills, **12 badges** and milestones.
 - **Lumo grows**: glow stages, hats and colours to unlock.
-- **Grown-ups view** behind a press-and-hold gate: a calm weekly summary and ideas to try at home.
+- **Notes for grown-ups**: the week in numbers, a day-by-day chart, what's getting stronger and what's still tricky (with words to practise), suggested practice and ideas for home.
+- Behind a **3-second hold**, not a password: it keeps young learners from wandering in, and asks again every time.
 
 </td>
 </tr>
@@ -98,13 +99,14 @@ Lumo, a little crayon firefly, cheers you on, helps when you're stuck, and never
 - **Sign up, log in, log out, delete account.** Or **try it as a guest** (progress stays on the device), and keep that progress when you make an account.
 - Progress, uploads, interests and Lumo's stories are **saved to the account** and follow the learner to any device.
 - Two devices can't silently overwrite each other (version-checked saves).
+- Friendly log-in and sign-up pages: show/hide password, a live length check, clear messages.
 
 </td>
 <td valign="top">
 
 ### 🗣️ Natural voices
 - **Fish Audio** (free model `s2.1-pro-free`), **Google Chirp 3 HD** or **Groq Orpheus**, whichever is set up.
-- A **pre-built voice pack** for every fixed line, word and syllable, so common speech is instant.
+- A **pre-built voice pack** for common lines, words and syllables, so frequent speech is instant (`npm run voices` fills in the rest).
 - **Lumen's own voice** (Piper or eSpeak) on the server, used whenever a cloud voice can't answer, so Lumo is never silent, even in browsers with no voices of their own.
 
 </td>
@@ -117,9 +119,9 @@ Lumo, a little crayon firefly, cheers you on, helps when you're stuck, and never
 |---|---|
 | **Fonts** | Lexend, OpenDyslexic or Atkinson Hyperlegible |
 | **Look** | Three text sizes, four backgrounds (including dark), adjustable spacing and line width, paragraph focus |
-| **Kindness** | No timers, no red crosses, no scores in the learner's face. Mistakes get hints. |
+| **Kindness** | No timers and no red crosses. Mistakes get hints, and missed words come back gently later. |
 | **Sound** | Every instruction and word can be heard |
-| **Motion** | Follows the device's *reduce motion* setting, or choose it yourself |
+| **Motion** | Gentle page slides, sparkles for real wins, a trail that draws itself. All of it switches off with the device's *reduce motion* setting, or in Settings. |
 | **Keyboard** | Full keyboard play. Press <kbd>?</kbd> for every shortcut. |
 | **Phones** | Bottom navigation, large touch targets, no sideways scrolling |
 
@@ -135,8 +137,9 @@ Lumo, a little crayon firefly, cheers you on, helps when you're stuck, and never
 | <kbd>1</kbd>–<kbd>4</kbd> | Pick an answer |
 | <kbd>Enter</kbd> | Check. Press again to continue. |
 | <kbd>Space</kbd> | Hear the word again |
+| <kbd>←</kbd> <kbd>→</kbd> | Move between syllable boxes (Syllable Speller) |
 | <kbd>Esc</kbd> | Leave the round · close word help |
-| <kbd>←</kbd> <kbd>→</kbd> then <kbd>Enter</kbd> | Move word by word in the reader, then open word help |
+| Arrow keys, then <kbd>Enter</kbd> | Move word by word in the reader, then open word help |
 | <kbd>Shift</kbd> + <kbd>D</kbd> | Load the demo learner "Maya" (in the Classroom) |
 
 </details>
@@ -156,6 +159,8 @@ Lumo, a little crayon firefly, cheers you on, helps when you're stuck, and never
 | ![About me](docs/screenshots/about-me.png) | ![Progress](docs/screenshots/progress.png) |
 | **Playground** | **Log in / create account** |
 | ![Playground](docs/screenshots/playground.png) | ![Log in](docs/screenshots/login.png) |
+| **Notes for grown-ups** | **The hold-to-open gate** |
+| ![Notes for grown-ups](docs/screenshots/grown-ups.png) | ![Hold to open](docs/screenshots/gate.png) |
 
 <p align="center"><b>On a phone</b><br /><img src="docs/screenshots/phones.png" alt="Lumen on a phone: landing, classroom, reader" width="760" /></p>
 
@@ -219,6 +224,9 @@ Lumen is one container: the web app, the API, text recognition and the database 
 3. Paste `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `GROQ_API_KEY` and `FISH_API_KEY`, then **Apply**.
 
 Every push to `main` redeploys automatically.
+
+> [!NOTE]
+> The free plan has a small slice of CPU. Photos and text PDFs are quick, but **scanned PDFs take about 10 seconds a page** there (under a second on a normal computer). Progress shows page by page, and a paid plan makes it much faster.
 
 ### Anywhere else
 
@@ -299,7 +307,7 @@ docs/           spec, brand boards, screenshots
 ## 🧪 Testing
 
 ```bash
-npm test             # 207 unit tests: engine, courses, practice, speller, segmentation, accounts, AI checks…
+npm test             # 209 unit tests: engine, courses, practice, speller, segmentation, accounts, AI checks…
 npm run typecheck
 npm run smoke        # with the app running: 24 real-browser journeys
 ```
@@ -311,8 +319,11 @@ npm run smoke        # with the app running: 24 real-browser journeys
 - teach-first activities and Playground games (checking they don't touch reading progress);
 - whole-word help and pronunciation;
 - **a freshly generated photo through real OCR** and **a freshly generated PDF**;
-- back/forward, shortcuts, **Enter checks before it continues**;
+- back/forward, shortcuts, **Enter checks before it continues**, and the Classroom tab never landing on Progress or the grown-up notes;
+- **the grown-ups gate**: a short press doesn't open it, a full hold does, and leaving, locking or reloading asks again;
 - reduced motion and the phone layout.
+
+The journeys run with animations on, so page transitions are exercised too.
 
 The same suite runs in CI on every push, and against the live site.
 
@@ -331,7 +342,9 @@ npm run icons        # illustrations for word help and badges
 
 - **Word explanations** for story words were drafted by AI, checked by a script and partly corrected by hand. A person should still review them.
 - **The voice pack** is only partly built. With a Fish Audio or Google key, `npm run voices` fills in the rest.
-- **The free server sleeps** after 15 minutes without visitors. A paid plan or another host avoids the wake-up wait.
+- **The free server sleeps** after 15 minutes without visitors, and reads scanned PDFs slowly (about 10 seconds a page). A paid plan or another host avoids both.
+- **Voices:** Fish Audio is tested live. Google Chirp 3 HD is implemented and tested against recorded responses only, since no Google key was available.
+- **Animations** use the View Transitions API for page slides. Browsers without it change pages instantly; everything else still animates.
 - Lumen is a learning tool, not a medical one. It never diagnoses, treats, or claims to fix dyslexia.
 
 ## 📄 License
