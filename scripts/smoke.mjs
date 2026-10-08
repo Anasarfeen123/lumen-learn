@@ -118,7 +118,7 @@ try {
     await pause(page, 2800);
     await shot(page, 'hero');
     await page.getByRole('button', { name: /Start learning/ }).first().click();
-    await page.getByRole('heading', { name: 'Make your account' }).waitFor();
+    await page.getByRole('heading', { name: 'Make your Lumen account' }).waitFor();
     await page.getByRole('button', { name: 'Try it as a guest' }).click();
     await page.getByLabel('What should Lumo call you?').fill('Sam');
     await page.getByRole('button', { name: /Let's go/ }).click();
@@ -381,11 +381,11 @@ try {
   await journey('Signed-out visitors are sent to log in, then back to where they were going', async () => {
     await acct.goto(`${APP}/library`);
     await acct.waitForURL(/\/login\?next=%2Flibrary/);
-    await acct.getByRole('heading', { name: 'Log in' }).waitFor();
+    await acct.getByRole('heading', { name: 'Welcome back!' }).waitFor();
   });
 
   await journey('Sign up → progress saved to the database → log out → back is blocked → log in restores it', async () => {
-    await acct.getByRole('link', { name: 'Make an account' }).click();
+    await acct.getByRole('tab', { name: 'Create account' }).click();
     await acct.getByLabel(/What should Lumo call you/).fill('Robin');
     await acct.getByLabel(/^Email/).fill(email);
     await acct.getByLabel(/^Password/).fill('a-long-password');
