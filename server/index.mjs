@@ -9,7 +9,7 @@ import { lumoApi } from './lumo-api.mjs';
 import { extractApi } from './extract.mjs';
 import { accountApi } from './account-api.mjs';
 import { personalApi } from './personal-api.mjs';
-import { closeDb } from './db.mjs';
+import { closeDb, dbKind } from './db.mjs';
 import { logSetup } from './setup-log.mjs';
 
 const env = loadEnv();
@@ -69,7 +69,7 @@ async function serveStatic(req, res) {
 
 const server = createServer((req, res) => {
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) res.setHeader(k, v);
-  if (req.url === '/healthz') { res.setHeader('content-type', 'text/plain'); return res.end('ok'); }
+  if (req.url === '/healthz') { res.setHeader('content-type', 'text/plain'); return res.end(`ok · database: ${dbKind()}`); }
   return accountApi(req, res, () => personalApi(req, res, () => lumoApi(req, res, () => extractApi(req, res, () => serveStatic(req, res)))));
 });
 server.listen(PORT, () => {
