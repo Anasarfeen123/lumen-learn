@@ -103,12 +103,22 @@ export function Reader({ kind, id, title, pages, onBack, backLabel, subtitle, fe
   };
 
   const closeHelp = () => {
+    helpReq.current++; // an explanation still on its way must not reopen the panel
+    setHelpLoading(false);
     setHelp(null);
     const at = selected;
     setSelected(null);
     // Return focus to the same word, so reading continues from the same place.
     requestAnimationFrame(() => textRef.current?.querySelector<HTMLElement>(`[data-start="${at}"]`)?.focus());
   };
+
+  // Escape closes word help at any moment, even while it's still loading and focus is on the word.
+  useEffect(() => {
+    if (!help) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); closeHelp(); } };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   const sayWord = (w: string) => void speak(w, { rate: 0.8, style: 'word' });
 
@@ -289,7 +299,7 @@ export function Reader({ kind, id, title, pages, onBack, backLabel, subtitle, fe
 
       {help && (
         <aside className="word-help sketch" role="dialog" aria-modal="false" aria-labelledby="wh-word"
-          onKeyDown={(e) => { if (e.key === 'Escape') closeHelp(); }}>
+>
           <div className="wh-head">
             {help.icon && <img className="wh-icon" src={help.icon} alt="" aria-hidden="true" />}
             <h2 id="wh-word" className="learn">{help.word}</h2>
