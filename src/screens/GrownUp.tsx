@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLumen } from '../state/store';
 import { Lumo } from '../components/Lumo';
 import { Bulb, Trend } from '../components/Icons';
-import { buildReport, fillName, GAME_NAME, MIN_N, summaryStats, summaryTemplate, type Band, type TagRow } from '../engine/report';
-import { writeSummary } from '../services/ai';
+import { buildReport, fillName, GAME_NAME, homeIdeas, MIN_N, summaryStats, summaryTemplate, type Band, type TagRow } from '../engine/report';
+import { suggestIdeas, writeSummary, type Idea } from '../services/ai';
 import { PRIVACY_LINE, ResetConfirm } from './Settings';
 
 const NEED_MORE = 'Lumo needs a few more rounds to spot patterns here.';
@@ -36,6 +36,9 @@ export function GrownUp() {
   const template = useMemo(() => summaryTemplate(report), [report]);
   const [summary, setSummary] = useState(template);
   const [byAi, setByAi] = useState(false);
+  const fallbackIdeas = useMemo(() => homeIdeas(report), [report]);
+  const [ideas, setIdeas] = useState<Idea[]>(fallbackIdeas);
+  const [ideasByAi, setIdeasByAi] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const name = profile.name;
   const owner = name ? `${name}'s` : "Your learner's";
@@ -49,8 +52,15 @@ export function GrownUp() {
         if (live && text) { setSummary(text); setByAi(true); }
       });
     }
+    setIdeas(fallbackIdeas);
+    setIdeasByAi(false);
+    if (report.hasData) {
+      void suggestIdeas(stats).then((list) => {
+        if (live && list) { setIdeas(list); setIdeasByAi(true); }
+      });
+    }
     return () => { live = false; };
-  }, [stats, template, report.rounds]);
+  }, [stats, template, report.rounds, report.hasData, fallbackIdeas]);
 
   return (
     <main className="screen grownup" id="main">
@@ -105,6 +115,21 @@ export function GrownUp() {
               : <div key={s.label} className="meter-row"><div className="meter-head"><span>{s.label}</span></div><p className="empty">Needs {MIN_N}+ answers.</p></div>)}
           </div>
         ) : <p className="empty">{NEED_MORE}</p>}
+      </section>
+
+      <section className="panel sketch alt" style={{ marginTop: 24, minHeight: 0 }} aria-labelledby="ideas-h">
+        <h2 id="ideas-h">Ideas to try at home</h2>
+        <div className="ideas">
+          {ideas.map((idea, i) => (
+            <div key={idea.title} className={`idea sticky ${['yellow', 'leaf', 'sky'][i % 3]}`}>
+              <strong>{idea.title}</strong>
+              <p>{idea.how}</p>
+            </div>
+          ))}
+        </div>
+        <p className="note muted" style={{ fontSize: 13, margin: '10px 0 0' }}>
+          {ideasByAi ? 'Suggested by AI from practice totals only.' : 'Multisensory activities in the Orton-Gillingham tradition.'} A few minutes is plenty.
+        </p>
       </section>
 
       <footer className="footer-note">

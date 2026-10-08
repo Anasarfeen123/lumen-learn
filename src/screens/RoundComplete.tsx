@@ -7,13 +7,14 @@ import { Arrow, Bulb, Star } from '../components/Icons';
 import { GlowUp } from './GlowUp';
 import { GAME_NAME } from '../engine/report';
 import { nextChallenge } from '../engine/adaptive';
+import { SHORT_NAME } from '../engine/tags';
 import { line } from '../data/lines';
 import { sfx } from '../services/sfx';
 import { rephraseInsight } from '../services/ai';
 import type { RoundSummary } from '../engine/session';
 
 export function RoundComplete({ summary }: { summary: RoundSummary }) {
-  const { profile, update, go, say, reducedMotion } = useLumen();
+  const { profile, update, go, say, speakParts, reducedMotion } = useLumen();
   const [insight, setInsight] = useState(summary.insight.text);
   const [glowUp, setGlowUp] = useState(false);
   const leveledUp = summary.newLevel > summary.oldLevel;
@@ -21,11 +22,20 @@ export function RoundComplete({ summary }: { summary: RoundSummary }) {
   useEffect(() => {
     sfx.fanfare();
     const cheer = line('roundDone', profile.name);
-    say(`${cheer} ${summary.insight.text}`);
+    const rate = profile.settings.voiceRate;
+    say(`${cheer} ${summary.insight.text}`, { silent: true });
+    void speakParts([{ text: cheer, rate, pauseMs: 300 }, { text: summary.insight.text, rate }]);
 
     // Show the template now; swap in an AI phrasing only if it arrives in time and passes checks.
+    // The model gets the round's bank words and tags, so it can be specific ("rabbit and garden").
     let live = true;
-    void rephraseInsight(summary.insight.text, summary.insight.context).then((text) => {
+    const context = {
+      ...summary.insight.context,
+      game: GAME_NAME[summary.game],
+      firstTryWords: summary.words.filter((_, i) => summary.results[i] === 'first'),
+      tag: summary.insight.tag ? SHORT_NAME[summary.insight.tag] : undefined,
+    };
+    void rephraseInsight(summary.insight.text, context).then((text) => {
       if (!live || !text) return;
       setInsight(text);
       update((p) => ({ ...p, insights: [...p.insights.slice(0, -1), text] }));

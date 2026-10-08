@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { useLumen } from '../../state/store';
 import { Sheet } from './Sheet';
 import { Speaker } from '../../components/Icons';
 import { Squiggle } from '../../components/Doodles';
+import { Picture } from '../../components/Picture';
 import { arrangeOptions, detectiveDistractors, firstSound, sayableSound, soundDistractors } from '../../engine/items';
 import { ITEM_XP } from '../../engine/progression';
 import { GAME_NAME } from '../../engine/report';
@@ -11,6 +12,7 @@ import { pictureFor } from '../../data/pictures';
 import { sfx } from '../../services/sfx';
 import type { Result } from '../../engine/types';
 import type { ItemProps } from './GameScreen';
+import { useTip } from './useTip';
 
 type Phase = 'answer' | 'almost' | 'reveal' | 'correct';
 
@@ -33,7 +35,9 @@ export function ChoiceGame({ mode, word, level, index, idle, firstStreak, positi
   const [result, setResult] = useState<Result | null>(null);
   const [message, setMessage] = useState('');
   const [hint, setHint] = useState('');
+  const [aiTip, setAiTip] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
+  const tip = useTip({ game: mode, word: answer, syllables: word.syllables, options: options.filter((o) => o !== answer), tags: word.tags });
 
   const picture = pictureFor(word.picture);
   // Detective shows the picture except at level 5; Sound Match only as a reward.
@@ -81,7 +85,7 @@ export function ChoiceGame({ mode, word, level, index, idle, firstStreak, positi
       : 'Now you know it!';
     setMessage(msg);
     say(msg, { silent: true });
-    void speakParts([{ text: msg, rate, pauseMs: 200 }, { text: `${answer}!`, rate: 0.8 }]);
+    void speakParts([{ text: msg, rate, pauseMs: 200 }, { text: answer, rate: 0.8 }]);
   };
 
   const check = () => {
@@ -103,22 +107,28 @@ export function ChoiceGame({ mode, word, level, index, idle, firstStreak, positi
       sfx.almost();
       const msg = line('miss', name);
       setMessage(msg);
+      // Lumo's AI tip for this word, if one arrived; it never contains the answer.
+      const smart = tip.current;
+      setAiTip(smart);
+      const tipPart = smart ? [{ text: smart, rate, pauseMs: 300 }] : [];
       if (mode === 'detective') {
         const parts = word.syllables;
         setHint(parts.length > 1 ? `Listen to the beats: ${parts.join(' · ')}` : 'Listen slowly, sound by sound.');
-        say(msg, { silent: true });
+        say(smart ? `${msg} ${smart}` : msg, { silent: true });
         void speakParts([
           { text: msg, rate, pauseMs: 300 },
+          ...tipPart,
           ...parts.map((s, i) => ({ text: s, rate: 0.7, pauseMs: i < parts.length - 1 ? 350 : 0 })),
         ]);
       } else {
         const head = firstSound(answer);
         setHint(head);
-        say(msg, { silent: true });
+        say(smart ? `${msg} ${smart}` : msg, { silent: true });
         void speakParts([
           { text: msg, rate, pauseMs: 300 },
+          ...tipPart,
           { text: sayableSound(head), rate: 0.7, pauseMs: 400 },
-          { text: answer, rate: 0.7 },
+          { text: answer, rate: 0.8 },
         ]);
       }
       return;
@@ -157,6 +167,9 @@ export function ChoiceGame({ mode, word, level, index, idle, firstStreak, positi
     return () => window.removeEventListener('keydown', onKey);
   });
 
+  // Every card uses the size that fits the longest option, so size is never a clue.
+  const longest = Math.max(...options.map((o) => o.length));
+
   const title = mode === 'detective' ? "Find the word that's spelled right!" : 'Listen, then tap the word you hear!';
   const accent = mode === 'detective' ? 'var(--accent-detective)' : 'var(--accent-sound)';
   const listenHatch = mode === 'detective' ? 'hatch-lav' : 'hatch-blush';
@@ -175,10 +188,10 @@ export function ChoiceGame({ mode, word, level, index, idle, firstStreak, positi
       case 'almost':
         return (
           <Sheet tone="almost" pose="point" motion="wiggle" title={message}
-            sub={mode === 'sound'
+            sub={aiTip ?? (mode === 'sound'
               ? <>Listen to the first sound: <span className="chunk">{hint}</span></>
-              : hint}
-            meta="played slowly"
+              : hint)}
+            meta={aiTip ? (mode === 'sound' ? <>First sound: <span className="chunk">{hint}</span></> : hint) : 'played slowly'}
             action={{ label: 'Try again', onClick: tryAgain, variant: 'amber' }} />
         );
       case 'reveal':
@@ -206,7 +219,7 @@ export function ChoiceGame({ mode, word, level, index, idle, firstStreak, positi
           onClick={() => void playWord()} aria-label="Hear the word again">
           <Speaker size={mode === 'sound' ? 64 : 40} />
         </button>
-        {showPicture && <div className={`picture sketch ${mode === 'sound' ? 'pop' : ''}`} role="img" aria-label={word.picture ?? ''}>{picture}</div>}
+        {showPicture && picture && <Picture picture={picture} className={mode === 'sound' ? 'pop' : ''} />}
         {mode === 'detective' && <p className="hint-text">Tap a word, then press <mark>Check!</mark></p>}
       </div>
 
@@ -226,7 +239,7 @@ export function ChoiceGame({ mode, word, level, index, idle, firstStreak, positi
               disabled={isRemoved || phase === 'correct' || phase === 'almost' || (phase === 'reveal' && !isAnswer)}
               onClick={() => choose(opt)}>
               <span className="key" aria-hidden="true">{i + 1}</span>
-              {opt}
+              <span className="answer-text" style={{ '--len': longest } as CSSProperties}>{opt}</span>
             </button>
           );
         })}

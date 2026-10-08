@@ -10,11 +10,17 @@ export type FontChoice = 'lexend' | 'opendyslexic' | 'atkinson';
 export type Theme = 'cream' | 'blue' | 'green' | 'dark';
 export type MotionChoice = 'system' | 'full' | 'reduced';
 
+export type VoiceEngine = 'auto' | 'natural' | 'device';
+
 export interface Settings {
   size: TextSize;
   font: FontChoice;
   theme: Theme;
   voiceRate: number;
+  /** auto: the natural voice when it's set up, otherwise the device's voice. */
+  voiceEngine: VoiceEngine;
+  naturalVoice: string;
+  /** Device (browser) voice name, or null for the best available. */
   voiceName: string | null;
   sfx: boolean;
   motion: MotionChoice;
@@ -67,6 +73,8 @@ export const DEFAULT_SETTINGS: Settings = {
   font: 'lexend',
   theme: 'cream',
   voiceRate: 0.85,
+  voiceEngine: 'auto',
+  naturalVoice: 'hannah',
   voiceName: null,
   sfx: true,
   motion: 'system',

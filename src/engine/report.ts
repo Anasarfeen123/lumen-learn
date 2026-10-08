@@ -119,3 +119,23 @@ export function summaryTemplate(r: Report): string {
 export function fillName(text: string, name: string): string {
   return text.replaceAll('{name}', name || 'Your learner');
 }
+
+/** Hand-written, multisensory home activities per tricky area (used when the AI is off). */
+export const HOME_IDEAS: Record<Tag, { title: string; how: string }> = {
+  confusable: { title: 'Bat and ball for b and d', how: 'Make a "b" with your left hand: the bat comes first, then the ball. Trace big b and d letters in the air while saying their sounds.' },
+  irregular: { title: 'Tricky word detectives', how: 'Write one tricky word on a card each day. Circle the surprising part together, then trace it while saying each letter.' },
+  silent: { title: 'Spot the silent letter', how: 'Read words like knee and write together. Whisper the silent letter as you trace it, and say the rest out loud.' },
+  digraph: { title: 'Two letters, one sound', how: 'Make sh, ch and th cards. Say a word slowly and hold up the card when you hear the sound.' },
+  'vowel-team': { title: 'Vowel team hunt', how: 'Look for ai, oa and ee in a picture book. Say the sound each team makes and read the word together.' },
+  blend: { title: 'Slide the sounds', how: 'Say each sound of a blend slowly, like s and t, then slide them together faster and faster into one sound.' },
+  short: { title: 'Sound-out tapping', how: 'Tap a finger for each sound in a short word, then sweep your hand along the table to blend the sounds.' },
+  medium: { title: 'Letter card building', how: 'Mix up the letters of a word on cards. Build it together, saying each sound as the card goes down.' },
+  long: { title: 'Chop it up', how: 'Write a long word big. Draw lines between the beats, read each part, then read the whole word with a sweep.' },
+  multi: { title: 'Clap the beats', how: 'Clap each beat in a long word, like va, ca, tion. Then write each beat in its own box before joining them.' },
+};
+
+/** Fallback ideas: one per tricky area, then the beats idea, never more than three. */
+export function homeIdeas(r: Report): { title: string; how: string }[] {
+  const tags: Tag[] = [...r.tricky.map((t) => t.tag), 'multi', 'confusable'];
+  return [...new Set(tags)].slice(0, 3).map((t) => HOME_IDEAS[t]);
+}

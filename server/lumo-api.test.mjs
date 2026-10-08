@@ -54,7 +54,10 @@ describe('Groq call', () => {
 
   function mockGroq(content) {
     const calls = [];
-    globalThis.fetch = async (url, init) => {
+    globalThis.fetch = async (url, init = {}) => {
+      if (String(url).endsWith('/models')) {
+        return new Response(JSON.stringify({ data: [{ id: 'openai/gpt-oss-120b' }] }), { status: 200 });
+      }
       calls.push({ url, init, body: JSON.parse(init.body) });
       return new Response(JSON.stringify({ choices: [{ message: { content } }] }), { status: 200 });
     };
@@ -63,23 +66,25 @@ describe('Groq call', () => {
 
   it('sends an OpenAI-style request with the key server-side, and returns a valid line', async () => {
     process.env.GROQ_API_KEY = 'test-key';
-    const calls = mockGroq('"Vowel teams feel friendlier now. Nice work!"');
+    const calls = mockGroq('{"text": "Vowel teams feel friendlier now. Nice work!"}');
     const r = await call('POST', '/api/lumo/insight', { template: 'Vowel teams are getting easier. I can tell!', context: { tag: 'vowel-team' } });
     expect(r).toEqual({ status: 200, body: { text: 'Vowel teams feel friendlier now. Nice work!' } });
     expect(calls[0].url).toBe('https://api.groq.com/openai/v1/chat/completions');
     expect(calls[0].init.headers.authorization).toBe('Bearer test-key');
     expect(calls[0].body.messages[0].role).toBe('system');
+    expect(calls[0].body.model).toBe('openai/gpt-oss-120b');
+    expect(calls[0].body.response_format).toEqual({ type: 'json_object' });
   });
 
   it('refuses a reply that breaks the rules, so the template is kept', async () => {
     process.env.GROQ_API_KEY = 'test-key';
-    mockGroq('That was wrong, but 2 more tries!');
+    mockGroq('{"text": "That was wrong, but 2 more tries!"}');
     expect((await call('POST', '/api/lumo/insight', { template: 'x' })).status).toBe(422);
   });
 
   it('never invents numbers in the grown-up summary', async () => {
     process.env.GROQ_API_KEY = 'test-key';
-    mockGroq('{name} practised for 30 minutes this week.');
+    mockGroq('{"text": "{name} practised for 30 minutes this week."}');
     expect((await call('POST', '/api/lumo/summary', { stats: { minutesThisWeek: 24 } })).status).toBe(422);
   });
 });

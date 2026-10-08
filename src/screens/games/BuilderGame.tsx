@@ -3,6 +3,7 @@ import { useLumen } from '../../state/store';
 import { Sheet } from './Sheet';
 import { Speaker } from '../../components/Icons';
 import { Squiggle } from '../../components/Doodles';
+import { Picture } from '../../components/Picture';
 import { builderTiles, type Tile } from '../../engine/items';
 import { ITEM_XP } from '../../engine/progression';
 import { line } from '../../data/lines';
@@ -10,6 +11,7 @@ import { pictureFor } from '../../data/pictures';
 import { sfx } from '../../services/sfx';
 import type { Result } from '../../engine/types';
 import type { ItemProps } from './GameScreen';
+import { useTip } from './useTip';
 
 type Phase = 'answer' | 'almost' | 'filling' | 'shown' | 'correct';
 
@@ -27,6 +29,8 @@ export function BuilderGame({ word, level, index, idle, firstStreak, onResolved,
   const [message, setMessage] = useState('');
   const [speaking, setSpeaking] = useState(false);
   const fillTimer = useRef<number[]>([]);
+  const tip = useTip({ game: 'builder', word: word.word, syllables: word.syllables, tags: word.tags });
+  const [aiTip, setAiTip] = useState<string | null>(null);
 
   const byId = (id: string) => tiles.find((t) => t.id === id)!;
   const placed = new Set(slots.filter(Boolean) as string[]);
@@ -79,8 +83,8 @@ export function BuilderGame({ word, level, index, idle, firstStreak, onResolved,
     const msg = r === 'first' && firstStreak + 1 === 3 ? line('streak', name) : 'You built it!';
     setMessage(msg);
     say(msg, { silent: true });
-    const beats = word.syllables.length > 1 ? word.syllables.join(' ... ') : word.word;
-    void speakParts([{ text: msg, rate, pauseMs: 200 }, { text: beats, rate: 0.75, pauseMs: 250 }, { text: word.word, rate: 0.8 }]);
+    const beats = word.syllables.length > 1 ? word.syllables.map((s) => ({ text: s, rate: 0.7, pauseMs: 300 })) : [];
+    void speakParts([{ text: msg, rate, pauseMs: 200 }, ...beats, { text: word.word, rate: 0.8 }]);
   };
 
   const check = () => {
@@ -103,7 +107,10 @@ export function BuilderGame({ word, level, index, idle, firstStreak, onResolved,
       const msg = n > 0 ? `${n} of ${units.length} ${pieceWord} are right! Fix the rest.` : line('miss', name);
       setMessage(msg);
       setPhase('almost');
-      say(msg);
+      const smart = tip.current;
+      setAiTip(smart);
+      say(smart ? `${msg} ${smart}` : msg, { silent: true });
+      void speakParts([{ text: msg, rate, pauseMs: 300 }, ...(smart ? [{ text: smart, rate }] : [])]);
       return;
     }
     // Second wrong check: the word fills itself in slowly, saying each piece.
@@ -187,7 +194,7 @@ export function BuilderGame({ word, level, index, idle, firstStreak, onResolved,
       case 'almost':
         return (
           <Sheet tone="almost" pose="point" motion="wiggle" title="Almost!" sub={message}
-            meta={`The glowing ${chunks ? 'piece' : 'letter'} goes next.`}
+            meta={aiTip ?? `The glowing ${chunks ? 'piece' : 'letter'} goes next.`}
             action={{ label: 'Try again', onClick: tryAgain, variant: 'amber' }} />
         );
       case 'filling':
@@ -219,7 +226,7 @@ export function BuilderGame({ word, level, index, idle, firstStreak, onResolved,
         <button type="button" className={`listen hatch-leaf ${speaking ? 'speaking' : ''}`} onClick={() => void playWord()} aria-label="Hear the word again">
           <Speaker size={40} />
         </button>
-        {picture && <div className="picture sketch" role="img" aria-label={word.picture ?? ''}>{picture}</div>}
+        {picture && <Picture picture={picture} />}
       </div>
 
       <div className="slots" role="group" aria-label={`Word slots, ${units.length} ${pieceWord}`}>

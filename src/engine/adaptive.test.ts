@@ -4,6 +4,7 @@ import {
   updateMastery, weakness, type LearnerState,
 } from './adaptive';
 import { seeded } from './random';
+import { ALL_TAGS } from './tags';
 import { BANK, BY_ID } from './wordbank';
 import type { Mastery } from './types';
 
@@ -101,7 +102,8 @@ describe('pickRound', () => {
   });
 
   it('leans toward weak tags', () => {
-    const mastery: Mastery = { confusable: { m: 0.05, n: 20 }, short: { m: 0.9, n: 20 }, blend: { m: 0.9, n: 20 }, 'vowel-team': { m: 0.9, n: 20 } };
+    // Every tag strong except look-alike letters.
+    const mastery: Mastery = Object.fromEntries(ALL_TAGS.map((t) => [t, { m: t === 'confusable' ? 0.05 : 0.9, n: 20 }]));
     let confusable = 0;
     let total = 0;
     for (let seed = 1; seed < 200; seed++) {
@@ -111,8 +113,12 @@ describe('pickRound', () => {
         if (w.tags.includes('confusable')) confusable++;
       }
     }
-    // 8 of 14 words in the band are confusable (57%); weighting should push well above that.
-    expect(confusable / total).toBeGreaterThan(0.65);
+    // Weighting should push confusable words well above their share of the level band.
+    // Baseline: their share of the band, weighted by level the way the engine is (level L ×3).
+    const band = BANK.filter((w) => w.level === 2 || w.level === 1);
+    const lw = (w: (typeof BANK)[number]) => (w.level === 2 ? 3 : 1);
+    const base = band.filter((w) => w.tags.includes('confusable')).reduce((s, w) => s + lw(w), 0) / band.reduce((s, w) => s + lw(w), 0);
+    expect(confusable / total).toBeGreaterThan(base + 0.08);
   });
 });
 

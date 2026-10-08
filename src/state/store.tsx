@@ -4,7 +4,7 @@ import { demoProfile } from './demo';
 import { rollWeekSnapshot, type RoundSummary } from '../engine/session';
 import type { GameId, Mastery, Word } from '../engine/types';
 import { setSfxEnabled } from '../services/sfx';
-import { speak, speakSequence, stopSpeaking } from '../services/speech';
+import { loadStatus, setVoicePrefs, speak, speakSequence, stopSpeaking, type Part } from '../services/speech';
 import { toBubbles } from '../data/lines';
 
 export type Screen =
@@ -32,7 +32,7 @@ interface LumenContext {
   /** Lumo's current line(s), shown in a bubble and spoken. */
   say: (text: string, opts?: { silent?: boolean }) => void;
   speakWord: (text: string, rate?: number) => Promise<void>;
-  speakParts: (parts: { text: string; rate?: number; pauseMs?: number }[]) => Promise<void>;
+  speakParts: (parts: Part[]) => Promise<void>;
   announce: (text: string) => void;
 }
 
@@ -72,6 +72,12 @@ export function LumenProvider({ children }: { children: ReactNode }) {
   const reducedMotion = profile.settings.motion === 'reduced' || (profile.settings.motion === 'system' && systemReduced);
 
   useEffect(() => { storage.save(profile); }, [profile, storage]);
+  useEffect(() => { void loadStatus(); }, []);
+  // The learner's name never leaves the device, including in the natural voice.
+  useEffect(() => {
+    const s = profile.settings;
+    setVoicePrefs({ engine: s.voiceEngine, naturalVoice: s.naturalVoice, deviceVoice: s.voiceName, privateWords: [profile.name] });
+  }, [profile.settings, profile.name]);
   useEffect(() => { applySettings(profile.settings, reducedMotion); }, [profile.settings, reducedMotion]);
 
   const settingsRef = useRef(profile.settings);
@@ -92,22 +98,19 @@ export function LumenProvider({ children }: { children: ReactNode }) {
     requestAnimationFrame(() => setLiveText(text));
   }, []);
 
-  const speakParts = useCallback(
-    (parts: { text: string; rate?: number; pauseMs?: number }[]) => speakSequence(parts, settingsRef.current.voiceName),
-    [],
-  );
+  const speakParts = useCallback((parts: Part[]) => speakSequence(parts), []);
 
   const say = useCallback((text: string, opts: { silent?: boolean } = {}) => {
     announce(text);
     if (opts.silent) return;
     const rate = settingsRef.current.voiceRate;
-    void speakSequence(toBubbles(text).map((t) => ({ text: t, rate, pauseMs: 250 })), settingsRef.current.voiceName);
+    void speakSequence(toBubbles(text).map((t) => ({ text: t, rate, pauseMs: 250, style: 'lumo' as const })));
   }, [announce]);
 
   const speakWord = useCallback((text: string, rate = 0.8) => {
     // Word prompts are a little slower than Lumo's lines, so each sound is clear.
     const r = settingsRef.current.voiceRate >= 1 ? rate + 0.1 : rate;
-    return speak(text, { rate: r, voiceName: settingsRef.current.voiceName });
+    return speak(text, { rate: r, style: 'word' });
   }, []);
 
   const loadDemo = useCallback(() => {

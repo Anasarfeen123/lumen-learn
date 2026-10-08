@@ -10,13 +10,15 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "start": "node --env-file-if-exists=.env server/index.mjs",
+    "start": "node server/index.mjs",
     "preview": "npm run build && npm start",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b",
     "check:words": "vitest run src/engine/wordbank.test.ts",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "voices": "node scripts/build-voices.mjs",
+    "pictures": "node scripts/fetch-pictures.mjs"
   },
   "dependencies": {
     "@fontsource/atkinson-hyperlegible": "^5.3.0",

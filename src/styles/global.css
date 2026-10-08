@@ -531,12 +531,15 @@ img { max-width: 100%; }
   font-size: 76px;
   line-height: 1;
 }
+.picture img { width: 82%; height: 82%; object-fit: contain; display: block; user-select: none; }
+.anim .picture img { animation: picture-in 320ms var(--ease-pop) both; }
+@keyframes picture-in { from { transform: scale(0.7) rotate(-6deg); opacity: 0; } to { transform: none; opacity: 1; } }
 .anim .picture.pop { animation: pop 250ms var(--ease-pop); }
 @keyframes pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .hint-text { font-family: var(--font-hand); font-size: calc(20px * var(--ui-scale)); color: var(--ink-muted); }
 .hint-text mark { background: #ffd27a; color: #2b2c5e; padding: 0 6px; }
 
-.answers { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 22px; }
+.answers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 22px; }
 .answer {
   position: relative;
   min-height: 112px;
@@ -553,6 +556,14 @@ img { max-width: 100%; }
   transition: transform 80ms ease-out, opacity 300ms ease, box-shadow 80ms;
 }
 .answer:nth-child(2n) { border-radius: var(--wobble-2); }
+/* Words always fit their card: the card is a size container and the word
+   scales to its width (about 0.7em per Lexend letter), never past the normal size. */
+.answer { container-type: inline-size; overflow: hidden; }
+.answer-text {
+  display: block;
+  white-space: nowrap;
+  font-size: min(calc(42px * var(--learn-scale)), calc((100cqi - 8px) / (var(--len, 6) * 0.68)));
+}
 .answer:active:not(:disabled) { transform: translateY(2px); }
 .answer[aria-pressed='true'] {
   background: repeating-linear-gradient(-38deg, var(--lav-a) 0 7px, var(--lav-b) 7px 10px);
@@ -745,6 +756,10 @@ img { max-width: 100%; }
 .band-Growing { color: var(--accent-detective); }
 .band-Getting { color: var(--try-text); }
 .example { font-size: 14px; color: var(--ink-muted); margin-top: 4px; }
+.ideas { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px; margin-top: 12px; }
+.idea { color: #2b2c5e; }
+.idea strong { font-family: var(--font-hand); font-size: 22px; font-weight: 400; display: block; }
+.idea p { margin: 6px 0 0; font-size: 15px; line-height: 1.55; }
 .footer-note { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; border-top: 2px dashed var(--line-soft); margin-top: 30px; padding-top: 14px; font-size: 14px; color: var(--ink-muted); }
 .empty { color: var(--ink-muted); font-size: 15px; }
 

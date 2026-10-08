@@ -9,6 +9,7 @@ import { line } from '../../data/lines';
 import { sfx } from '../../services/sfx';
 import type { Result, Word } from '../../engine/types';
 import type { ItemProps } from './GameScreen';
+import { useTip } from './useTip';
 
 type Phase = 'answer' | 'almost' | 'filling' | 'shown' | 'correct';
 
@@ -38,6 +39,8 @@ export function SpellerGame({ word, level, index, idle, firstStreak, onResolved,
   const [drag, setDrag] = useState<{ letter: string; x: number; y: number } | null>(null);
   const dragStart = useRef<{ letter: string; x: number; y: number; moved: boolean } | null>(null);
   const timers = useRef<number[]>([]);
+  const tip = useTip({ game: 'speller', word: word.word, syllables: word.syllables, tags: word.tags });
+  const [aiTip, setAiTip] = useState<string | null>(null);
   const rate = profile.settings.voiceRate;
   const name = profile.name;
 
@@ -153,10 +156,13 @@ export function SpellerGame({ word, level, index, idle, firstStreak, onResolved,
       const msg = nRight > 0 ? `${nRight} of ${openIdx.length} beats are right! Fix the rest.` : line('miss', name);
       setMessage(msg);
       setPhase('almost');
-      say(msg, { silent: true });
+      const smart = tip.current;
+      setAiTip(smart);
+      say(smart ? `${msg} ${smart}` : msg, { silent: true });
       // Replay just the beats that need fixing, slowly.
       void speakParts([
         { text: msg, rate, pauseMs: 300 },
+        ...(smart ? [{ text: smart, rate, pauseMs: 300 }] : []),
         ...wrong.map((i) => ({ text: said[i], rate: 0.65, pauseMs: 450 })),
         { text: word.word, rate: 0.8 },
       ]);
@@ -238,7 +244,7 @@ export function SpellerGame({ word, level, index, idle, firstStreak, onResolved,
       case 'almost':
         return (
           <Sheet tone="almost" pose="point" motion="wiggle" title="Almost!" sub={message}
-            meta="The dots show how many letters each beat needs."
+            meta={aiTip ?? 'The dots show how many letters each beat needs.'}
             action={{ label: 'Try again', onClick: tryAgain, variant: 'amber' }} />
         );
       case 'filling':

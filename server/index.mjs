@@ -1,10 +1,14 @@
 // Production server: serves the built app from dist/ and Lumo's AI endpoints.
-// Usage: npm run build && GROQ_API_KEY=... npm start
+// Usage: npm run build && npm start   (reads .env next to package.json)
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadEnv } from './env.mjs';
 import { lumoApi } from './lumo-api.mjs';
+import { logSetup } from './setup-log.mjs';
+
+const env = loadEnv();
 
 const ROOT = resolve(fileURLToPath(new URL('../dist', import.meta.url)));
 const PORT = Number(process.env.PORT) || 4173;
@@ -43,6 +47,6 @@ async function serveStatic(req, res) {
 }
 
 createServer((req, res) => lumoApi(req, res, () => serveStatic(req, res))).listen(PORT, () => {
-  const ai = process.env.GROQ_API_KEY ? `on (Groq)` : 'off (templates only)';
-  console.log(`Lumen running at http://localhost:${PORT}  ·  AI phrasing: ${ai}`);
+  console.log(`Lumen running at http://localhost:${PORT}`);
+  void logSetup(env);
 });

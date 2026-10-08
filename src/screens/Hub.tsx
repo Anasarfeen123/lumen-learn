@@ -9,7 +9,7 @@ import { GAMES, type GameId } from '../engine/types';
 import { stageProgress, type Stage } from '../engine/progression';
 import { nextNodeIsChest, openChest } from '../engine/session';
 import { GAME_NAME } from '../engine/report';
-import { speechSupported } from '../services/speech';
+import { useLumoStatus } from '../services/useLumoStatus';
 import { sfx } from '../services/sfx';
 import { line } from '../data/lines';
 import type { PathNode } from '../state/profile';
@@ -30,6 +30,7 @@ const NODE_GAP = 104;
 
 export function Hub() {
   const { profile, update, go, say, loadDemo, storageOk } = useLumen();
+  const { canSpeak: speechSupported } = useLumoStatus();
   const [gate, setGate] = useState(false);
   const [glowUp, setGlowUp] = useState<Stage | null>(null);
   const rec = profile.recommended;

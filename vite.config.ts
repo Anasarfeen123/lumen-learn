@@ -1,31 +1,33 @@
 /// <reference types="vitest/config" />
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { loadEnv } from './server/env.mjs';
 import { lumoApi } from './server/lumo-api.mjs';
+import { logSetup } from './server/setup-log.mjs';
 
-export default defineConfig(({ mode }) => {
-  // Server-only secrets (GROQ_*) from .env go to the dev middleware, never to the bundle.
-  const env = loadEnv(mode, process.cwd(), 'GROQ_');
-  for (const [k, v] of Object.entries(env)) process.env[k] ??= v;
+// The same .env loader as `npm start`. Server-only secrets (GROQ_*) stay in the
+// dev server's process; nothing from .env is bundled into the browser code
+// unless it starts with VITE_.
+const env = loadEnv();
 
-  return {
-    // Set BASE_PATH=/repo-name/ when hosting under a subpath (GitHub Pages).
-    base: process.env.BASE_PATH || '/',
-    plugins: [
-      react(),
-      {
-        name: 'lumo-api',
-        configureServer(server) {
-          server.middlewares.use(lumoApi);
-        },
-        configurePreviewServer(server) {
-          server.middlewares.use(lumoApi);
-        },
+export default defineConfig({
+  // Set BASE_PATH=/repo-name/ when hosting under a subpath (GitHub Pages).
+  base: process.env.BASE_PATH || '/',
+  plugins: [
+    react(),
+    {
+      name: 'lumo-api',
+      configureServer(server) {
+        server.middlewares.use(lumoApi);
+        server.httpServer?.once('listening', () => void logSetup(env, (m) => server.config.logger.info(m)));
       },
-    ],
-    test: {
-      environment: 'node',
-      include: ['src/**/*.test.ts', 'server/**/*.test.mjs'],
+      configurePreviewServer(server) {
+        server.middlewares.use(lumoApi);
+      },
     },
-  };
+  ],
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.ts', 'server/**/*.test.mjs'],
+  },
 });

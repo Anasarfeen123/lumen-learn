@@ -12,6 +12,11 @@ import { completeRound, markServed, recordAnswer } from '../../engine/session';
 import { ITEM_XP } from '../../engine/progression';
 import { line } from '../../data/lines';
 import { sfx } from '../../services/sfx';
+import { prefetch, type Part } from '../../services/speech';
+import { spokenSyllables } from '../../engine/speller';
+import { GAME_INTRO } from '../../data/lines';
+import { pictureFor } from '../../data/pictures';
+import { preloadPictures } from '../../components/Picture';
 import type { GameId, Result, Word } from '../../engine/types';
 
 const IDLE_MS = 60_000;
@@ -52,8 +57,18 @@ export function GameScreen({ game, words }: { game: GameId; words?: Word[] }) {
   const profileRef = useRef(profile);
   profileRef.current = profile;
 
-  // Mark the round's words as served once, as it starts.
+  // Mark the round's words as served once, as it starts, and warm up the voice
+  // for every word, beat and prompt in it so nothing waits on the network.
   useEffect(() => {
+    const rate = profile.settings.voiceRate;
+    const parts: Part[] = [{ text: GAME_INTRO[game], rate }, { text: 'Find:', rate }, { text: 'Build the word.', rate }];
+    for (const w of round) {
+      parts.push({ text: w.word, rate: 0.8 });
+      const beats = w.family ? spokenSyllables(w) : w.syllables;
+      for (const b of beats) parts.push({ text: b, rate: 0.7 });
+    }
+    prefetch(parts);
+    preloadPictures(round.map((w) => pictureFor(w.picture)));
     update((p) => markServed(p, round));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
