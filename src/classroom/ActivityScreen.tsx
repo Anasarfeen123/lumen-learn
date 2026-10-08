@@ -10,6 +10,7 @@ import { shuffle } from '../engine/random';
 import { stagesCrossed } from '../engine/progression';
 import { speak, stopSpeaking } from '../services/speech';
 import { sfx } from '../services/sfx';
+import { celebrate } from '../services/motion';
 import { getStory } from '../library/content';
 import {
   ACTIVITY_BY_ID, ORDER, PATTERNS, RIDDLES, STORY_QUIZZES, TWINS, WRITE_PROMPTS,
@@ -157,6 +158,7 @@ function Activity({ activity }: { activity: ActivityInfo }) {
       });
     }
     sfx.fanfare();
+    celebrate('#main h1', { count: 26, spread: 1.4, delay: 250 });
     say('You finished! I loved working on that with you.');
     setPhase('done');
   };
@@ -301,6 +303,7 @@ function ChoiceView({ item, state, onResolve, activityId }: { item: Extract<Item
     if (!picked || state.done) return;
     if (picked === data.answer) {
       sfx.correct();
+      celebrate('.feedback.right');
       setMsg(null);
       onResolve({ done: true, correct: true, hints: tries, revealed: false, response: picked });
       void speak(`Yes! ${data.explain}`, { rate });
@@ -380,6 +383,7 @@ function OrderView({ item, state, onResolve }: { item: OrderItem; state: ItemSta
     if (line.length !== tiles.length) return;
     if (built === sentence) {
       sfx.correct();
+      celebrate('.feedback.right');
       onResolve({ done: true, correct: true, hints: tries, revealed: false, response: built });
       void speak(sentence, { rate: profile.settings.voiceRate });
       setMsg(null);

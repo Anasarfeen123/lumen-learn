@@ -24,7 +24,10 @@ export function PlanCard() {
     <section className="side-card soft plan-card" aria-labelledby="plan-h" aria-busy={state === undefined}>
       <h2 id="plan-h" className="side-title">Lumo's plan for you</h2>
       {state === undefined ? (
-        <p className="muted plan-loading"><Lumo pose="loading" size={44} motion="none" /> Lumo is thinking…</p>
+        <div className="plan-loading">
+          <p className="muted"><Lumo pose="loading" size={44} motion="none" /> Lumo is thinking…</p>
+          {[0, 1, 2].map((i) => <span key={i} className="shimmer" style={{ width: `${92 - i * 14}%` }} aria-hidden="true" />)}
+        </div>
       ) : (
         <>
           <p className="plan-greeting">{state.plan.greeting}</p>

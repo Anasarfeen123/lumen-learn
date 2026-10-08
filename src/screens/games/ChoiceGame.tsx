@@ -10,6 +10,7 @@ import { GAME_NAME } from '../../engine/report';
 import { GAME_INTRO, line } from '../../data/lines';
 import { pictureFor } from '../../data/pictures';
 import { sfx } from '../../services/sfx';
+import { celebrate } from '../../services/motion';
 import type { Result } from '../../engine/types';
 import type { ItemProps } from './GameScreen';
 import { useTip } from './useTip';
@@ -79,6 +80,7 @@ export function ChoiceGame({ mode, word, level, index, idle, firstStreak, positi
     setPhase('correct');
     setSelected(answer);
     sfx.correct();
+    celebrate('.sheet.correct .sheet-title');
     onResolved(r);
     const msg = r === 'first' ? (firstStreak + 1 === 3 ? line('streak', name) : line('first', name))
       : r === 'hint' ? line('afterHint', name)

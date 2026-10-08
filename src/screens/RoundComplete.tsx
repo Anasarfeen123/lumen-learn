@@ -10,6 +10,7 @@ import { nextChallenge } from '../engine/adaptive';
 import { SHORT_NAME } from '../engine/tags';
 import { line } from '../data/lines';
 import { sfx } from '../services/sfx';
+import { celebrate } from '../services/motion';
 import { rephraseInsight } from '../services/ai';
 import type { RoundSummary } from '../engine/session';
 
@@ -21,6 +22,7 @@ export function RoundComplete({ summary }: { summary: RoundSummary }) {
 
   useEffect(() => {
     sfx.fanfare();
+    celebrate('.stars-row', { count: 30, spread: 1.6, delay: 450 });
     const cheer = line('roundDone', profile.name);
     const rate = profile.settings.voiceRate;
     say(`${cheer} ${summary.insight.text}`, { silent: true });

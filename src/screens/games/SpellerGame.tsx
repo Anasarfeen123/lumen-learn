@@ -7,6 +7,7 @@ import { FAMILY_BY_ID, givenSyllables, showExamples, spokenSyllables } from '../
 import { ITEM_XP } from '../../engine/progression';
 import { line } from '../../data/lines';
 import { sfx } from '../../services/sfx';
+import { celebrate } from '../../services/motion';
 import type { Result, Word } from '../../engine/types';
 import type { ItemProps } from './GameScreen';
 import { useTip } from './useTip';
@@ -128,6 +129,7 @@ export function SpellerGame({ word, level, index, idle, firstStreak, onResolved,
     setPhase('correct');
     setLocked(syl.map(() => true));
     sfx.correct();
+    celebrate('.sheet.correct .sheet-title');
     onResolved(r);
     const msg = r === 'first' ? (firstStreak + 1 === 3 ? line('streak', name) : line('first', name)) : line('afterHint', name);
     setMessage(msg);

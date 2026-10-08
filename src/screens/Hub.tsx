@@ -19,6 +19,7 @@ import { lastReading } from '../library/progress';
 import type { SkillId } from '../classroom/activities';
 import { useLumoStatus } from '../services/useLumoStatus';
 import { sfx } from '../services/sfx';
+import { celebrate } from '../services/motion';
 import { line } from '../data/lines';
 import { ACTIVITIES } from '../classroom/activities';
 import { PlanCard } from '../personal/PlanCard';
@@ -90,6 +91,7 @@ export function Hub() {
       const { profile: next, stages } = openChest(profile);
       update(() => next);
       sfx.chime();
+      celebrate('.keep-going .btn', { count: 22 });
       say('A glow chest! Here is some extra glow.');
       if (stages.length) setGlowUp(stages.at(-1)!);
       return;
@@ -211,7 +213,8 @@ export function Hub() {
           <div className="flow" ref={flowRef}>
             <svg className="flow-trail" aria-hidden="true" width={trail.w} height={trail.h}>
               <path d={trail.all} fill="none" stroke="var(--line-soft)" strokeWidth="4" strokeDasharray="2 12" strokeLinecap="round" />
-              <path d={trail.done} fill="none" stroke="#ffbe46" strokeWidth="6" strokeLinecap="round" />
+              {/* The walked part of the trail draws itself in. */}
+              <path className="trail-done" key={trail.done} d={trail.done} pathLength={1} fill="none" stroke="#ffbe46" strokeWidth="6" strokeLinecap="round" />
             </svg>
             <Signpost style={{ left: -12, bottom: 40 }} />
             <span className="flow-scenery" aria-hidden="true">
@@ -415,8 +418,9 @@ export function ProgressRing({ value }: { value: number }) {
   return (
     <svg className="ring" viewBox="0 0 80 80" width="88" height="88" aria-hidden="true">
       <circle cx="40" cy="40" r="34" fill="none" stroke="var(--grey-a)" strokeWidth="9" />
-      <circle cx="40" cy="40" r="34" fill="none" stroke="var(--leaf)" strokeWidth="9" strokeLinecap="round"
-        strokeDasharray={C} strokeDashoffset={C * (1 - value)} transform="rotate(-90 40 40)" />
+      <circle className="ring-fill" cx="40" cy="40" r="34" fill="none" stroke="var(--leaf)" strokeWidth="9" strokeLinecap="round"
+        strokeDasharray={C} strokeDashoffset={C * (1 - value)} transform="rotate(-90 40 40)"
+        style={{ '--ring-c': C, '--ring-to': C * (1 - value) } as CSSProperties} />
       <g transform="translate(25 25)" color="var(--leaf)"><Sprout size={30} /></g>
     </svg>
   );

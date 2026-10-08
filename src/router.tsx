@@ -1,7 +1,8 @@
 // A small History API router: every screen has a real URL, so browser back,
 // forward, refresh and direct links all work. Each main section remembers the
 // last page you were on, so switching tabs returns you to where you left off.
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useRef, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { pageTransition, settleTransitions } from './services/motion';
 
 export type Section = 'home' | 'classroom' | 'library' | 'playground' | 'settings';
 
@@ -51,11 +52,16 @@ const Ctx = createContext<RouterContext | null>(null);
 
 export function RouterProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useState<Location>(read);
+  const indexRef = useRef<number>(Number(window.history.state?.idx ?? 0));
 
   useEffect(() => {
     const onPop = () => {
       window.dispatchEvent(new Event('lumen:navigate'));
-      setLocation(read());
+      // Going back slides the other way; history entries carry their position.
+      const idx = Number(window.history.state?.idx ?? 0);
+      const dir = idx < indexRef.current ? 'back' : 'forward';
+      indexRef.current = idx;
+      pageTransition(() => setLocation(read()), dir);
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
@@ -76,10 +82,21 @@ export function RouterProvider({ children }: { children: ReactNode }) {
     // Stop the old page's speech now, before the new page starts its own.
     window.dispatchEvent(new Event('lumen:navigate'));
     // Entries we push are marked, so "back" knows the previous page is part of Lumen.
-    const entry = { data: opts.state ?? null, inApp: opts.replace ? Boolean(window.history.state?.inApp) : true };
+    const fromPath = window.location.pathname;
+    const idx = Number(window.history.state?.idx ?? 0) + (opts.replace ? 0 : 1);
+    const entry = { data: opts.state ?? null, inApp: opts.replace ? Boolean(window.history.state?.inApp) : true, idx };
     if (opts.replace) window.history.replaceState(entry, '', url);
     else window.history.pushState(entry, '', url);
-    setLocation(read());
+    indexRef.current = idx;
+    // Only moves the learner makes slide. Redirects and the app's own moves (replace: log out,
+    // finishing a round, guards) apply at once, so the page and the app never disagree.
+    // A filter or search change on the same page doesn't animate either.
+    if (opts.replace || new URL(url, window.location.origin).pathname === fromPath) {
+      settleTransitions();
+      setLocation(read());
+    } else {
+      pageTransition(() => setLocation(read()), 'forward');
+    }
   }, []);
 
   const back = useCallback((fallback: string) => {

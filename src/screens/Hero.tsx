@@ -6,6 +6,7 @@ import { Lumo, type Pose } from '../components/Lumo';
 import { Picture } from '../components/Picture';
 import { pictureFor } from '../data/pictures';
 import { speak } from '../services/speech';
+import { burst, motionOn } from '../services/motion';
 import { activePath } from '../state/profile';
 import { courseOf, unitAt } from '../engine/courses';
 import { UNIT_SIZE } from '../engine/practice';
@@ -88,7 +89,7 @@ function LessonPreview() {
           {['a', 'o', 'u'].map((l) => (
             <button key={l} type="button" role="radio" aria-checked={picked === l}
               className={`preview-opt ${picked === l ? (l === 'a' ? 'right' : 'try') : ''}`}
-              onClick={() => setPicked(l)}>{l}</button>
+              onClick={(e) => { setPicked(l); if (l === 'a') burst(e.currentTarget, { count: 20 }); }}>{l}</button>
           ))}
         </div>
         <div className="preview-lumo" aria-live="polite">
@@ -98,6 +99,48 @@ function LessonPreview() {
       </div>
     </div>
   );
+}
+
+/* ------------------------------------------------------------ pointer motion */
+
+/** Gentle depth: layers drift a little with the pointer (mouse only, never with reduced motion). */
+function useParallax() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !window.matchMedia?.('(pointer: fine)').matches) return;
+    let frame = 0;
+    const onMove = (e: PointerEvent) => {
+      if (!motionOn()) return;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty('--px', String(((e.clientX - r.left) / r.width - 0.5).toFixed(3)));
+        el.style.setProperty('--py', String(((e.clientY - r.top) / r.height - 0.5).toFixed(3)));
+      });
+    };
+    const reset = () => { el.style.setProperty('--px', '0'); el.style.setProperty('--py', '0'); };
+    window.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerleave', reset);
+    return () => { window.removeEventListener('pointermove', onMove); document.removeEventListener('pointerleave', reset); cancelAnimationFrame(frame); };
+  }, []);
+  return ref;
+}
+
+/** A card that tilts toward the pointer, like picking up a real card. */
+function tiltHandlers() {
+  return {
+    onPointerMove: (e: React.PointerEvent<HTMLElement>) => {
+      if (e.pointerType !== 'mouse' || !motionOn()) return;
+      const r = e.currentTarget.getBoundingClientRect();
+      e.currentTarget.style.setProperty('--rx', `${(((e.clientY - r.top) / r.height) - 0.5) * -7}deg`);
+      e.currentTarget.style.setProperty('--ry', `${(((e.clientX - r.left) / r.width) - 0.5) * 9}deg`);
+    },
+    onPointerLeave: (e: React.PointerEvent<HTMLElement>) => {
+      e.currentTarget.style.setProperty('--rx', '0deg');
+      e.currentTarget.style.setProperty('--ry', '0deg');
+    },
+  };
 }
 
 /* ------------------------------------------------------------ page */
@@ -147,6 +190,7 @@ export function Hero() {
   // Lumo's short opening: on the first visit only, skippable, and never with reduced motion.
   const [intro, setIntro] = useState(() => !reducedMotion && !introSeen());
   const heading = useRef<HTMLHeadingElement>(null);
+  const art = useParallax();
 
   useEffect(() => {
     if (!intro) return;
@@ -201,7 +245,7 @@ export function Hero() {
               <p className="l-note"><span className="l-sun" aria-hidden="true" /> Designed with dyslexic learners in mind.</p>
             )}
           </div>
-          <div className="l-hero-art" aria-hidden="true">
+          <div className="l-hero-art" aria-hidden="true" ref={art}>
             <Cloud className="c1" /><Cloud className="c2" /><Cloud className="c3" />
             <span className="l-glow" />
             {intro && <span className="l-flyer"><Lumo pose="goodbye" size={150} motion="none" /></span>}
@@ -229,7 +273,7 @@ export function Hero() {
           <p className="l-sub">Practice reading, spelling, sounds and comprehension through activities that adapt as you learn.</p>
           <div className="l-places">
             {PLACES.map((p) => (
-              <a key={p.to} href={`${B}${p.to.slice(1)}`} className={`l-place ${p.tone}`} onClick={(e) => { e.preventDefault(); open(p.to); }}>
+              <a key={p.to} href={`${B}${p.to.slice(1)}`} className={`l-place ${p.tone}`} onClick={(e) => { e.preventDefault(); open(p.to); }} {...tiltHandlers()}>
                 <span className="l-place-art" aria-hidden="true">
                   {p.props.map((name) => { const pic = pictureFor(name); return pic ? <Picture key={name} picture={pic} className="l-prop" /> : null; })}
                   {p.tone === 'yellow' && <span className="l-tiles"><span>a</span><span>b</span><span>c</span></span>}
@@ -289,7 +333,7 @@ export function Hero() {
             </ul>
           </div>
           <div className="l-preview">
-            <LessonPreview />
+            <div className="l-preview-tilt" {...tiltHandlers()}><LessonPreview /></div>
             <p className="l-preview-note">This is real: tap a letter, or the speaker.</p>
           </div>
         </Reveal>

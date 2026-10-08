@@ -9,6 +9,7 @@ import { ITEM_XP } from '../../engine/progression';
 import { line } from '../../data/lines';
 import { pictureFor } from '../../data/pictures';
 import { sfx } from '../../services/sfx';
+import { celebrate } from '../../services/motion';
 import type { Result } from '../../engine/types';
 import type { ItemProps } from './GameScreen';
 import { useTip } from './useTip';
@@ -79,6 +80,7 @@ export function BuilderGame({ word, level, index, idle, firstStreak, onResolved,
     setResult(r);
     setPhase('correct');
     sfx.correct();
+    celebrate('.sheet.correct .sheet-title');
     onResolved(r);
     const msg = r === 'first' && firstStreak + 1 === 3 ? line('streak', name) : 'You built it!';
     setMessage(msg);

@@ -7,6 +7,7 @@ import { Squiggle } from '../components/Doodles';
 import { Arrow, Pause, Speaker } from '../components/Icons';
 import { pictureFor } from '../data/pictures';
 import { sfx } from '../services/sfx';
+import { celebrate } from '../services/motion';
 import { speak, stopSpeaking } from '../services/speech';
 import { isSolved, matchPairs, memoryDeck, patternPuzzle, scrambledBoard, slide, type MemoryCard, type PatternPuzzle, type Token } from './games';
 
@@ -137,6 +138,7 @@ function GameShell({ def }: { def: GameDef }) {
     }));
     setOutcome(o);
     sfx.fanfare();
+    celebrate('#main h1', { count: 26, spread: 1.4, delay: 200 });
     say(o.line);
     setPhase('done');
   };

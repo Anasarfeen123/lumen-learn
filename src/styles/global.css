@@ -1106,8 +1106,6 @@ html { scroll-behavior: smooth; }
 @keyframes l-twinkle { 50% { transform: scale(0.8) rotate(12deg); opacity: 0.6; } }
 
 /* sections appear softly as they scroll in */
-.anim .landing .reveal { opacity: 0; transform: translateY(18px); transition: opacity 600ms ease, transform 600ms ease; }
-.anim .landing .reveal.in { opacity: 1; transform: none; }
 
 /* value strip */
 .l-values {
@@ -1825,3 +1823,108 @@ h1[tabindex='-1']:focus { outline: none; }
   .au-perks { display: none; }
   .au-home { display: none; }
 }
+
+/* ================================================================ motion system
+   Everything below only runs with motion on (.anim), and view transitions only
+   start when motion is on (see services/motion.ts). */
+
+/* ---- page transitions: the new page slides in from where you're going; header and tabs stay put */
+.appbar { view-transition-name: appbar; }
+.tabs { view-transition-name: tabs; }
+:root[data-nav] .route { animation: none; }
+::view-transition-group(root) { animation-duration: 300ms; }
+:root[data-nav='forward']::view-transition-old(root) { animation: vt-out-left 220ms cubic-bezier(.4,0,1,1) both; }
+:root[data-nav='forward']::view-transition-new(root) { animation: vt-in-right 320ms cubic-bezier(.2,.8,.2,1) both; }
+:root[data-nav='back']::view-transition-old(root) { animation: vt-out-right 220ms cubic-bezier(.4,0,1,1) both; }
+:root[data-nav='back']::view-transition-new(root) { animation: vt-in-left 320ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes vt-out-left { to { opacity: 0; transform: translateX(-28px); } }
+@keyframes vt-in-right { from { opacity: 0; transform: translateX(36px); } }
+@keyframes vt-out-right { to { opacity: 0; transform: translateX(28px); } }
+@keyframes vt-in-left { from { opacity: 0; transform: translateX(-36px); } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
+/* ---- celebration bursts */
+.burst-layer { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+.burst-dot, .burst-star { position: fixed; width: 10px; height: 10px; border-radius: 50%; background: var(--c); will-change: transform, opacity; }
+.burst-star { width: 16px; height: 16px; border-radius: 0; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+
+/* ---- progress ring fills, the walked trail draws itself */
+.anim .ring-fill { animation: ring-fill 1.1s cubic-bezier(.3,.8,.3,1) 150ms both; }
+@keyframes ring-fill { from { stroke-dashoffset: var(--ring-c); } to { stroke-dashoffset: var(--ring-to); } }
+.trail-done { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.anim .trail-done { animation: trail-draw 1.2s cubic-bezier(.4,0,.2,1) 200ms both; }
+@keyframes trail-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+/* ---- "Lumo is thinking" shimmer */
+.shimmer { display: block; height: 12px; border-radius: 99px; margin: 8px 0; background: var(--grey-a); }
+.anim .shimmer { background: linear-gradient(90deg, var(--grey-a) 0%, var(--card) 45%, var(--grey-a) 90%); background-size: 220% 100%; animation: shimmer 1.4s linear infinite; }
+@keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+.plan-loading p { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; }
+.story-card.writing { display: grid; justify-items: start; gap: 2px; padding: 16px; margin-bottom: 18px; max-width: 360px; }
+
+/* ---- staggered entrances: lists arrive one card at a time */
+.anim .cards > :nth-child(2) { animation-delay: 50ms; }
+.anim .cards > :nth-child(3) { animation-delay: 100ms; }
+.anim .cards > :nth-child(4) { animation-delay: 150ms; }
+.anim .cards > :nth-child(5) { animation-delay: 200ms; }
+.anim .cards > :nth-child(6) { animation-delay: 250ms; }
+.anim .cards > :nth-child(n+7) { animation-delay: 300ms; }
+.anim .badge, .anim .plan-step, .anim .interest, .anim .goal, .anim .side-card { animation: card-in 300ms ease-out both; }
+.anim .plan-steps li:nth-child(2) .plan-step, .anim .badges > :nth-child(2) { animation-delay: 70ms; }
+.anim .plan-steps li:nth-child(3) .plan-step, .anim .badges > :nth-child(3) { animation-delay: 140ms; }
+.anim .class-side > :nth-child(2) { animation-delay: 80ms; }
+.anim .class-side > :nth-child(3) { animation-delay: 160ms; }
+.anim .class-side > :nth-child(n+4) { animation-delay: 240ms; }
+.anim .interest-grid > :nth-child(n+4) { animation-delay: 60ms; }
+.anim .interest-grid > :nth-child(n+7) { animation-delay: 120ms; }
+.anim .interest-grid > :nth-child(n+10) { animation-delay: 180ms; }
+.anim .interest.on { animation: pop 260ms var(--ease-pop); }
+
+/* ---- small, satisfying feedback */
+.anim .w.sel { animation: word-pick 240ms var(--ease-pop); }
+@keyframes word-pick { 40% { transform: scale(1.08); } }
+.anim .feedback.right { animation: slide-up 260ms ease-out; }
+.anim .plan-step:hover .plan-num { animation: pop 300ms var(--ease-pop); }
+.anim .au-error { animation: nudge 360ms ease-in-out; }
+@keyframes nudge { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+
+/* ---- landing: depth, tilt and arrivals */
+.l-hero-art > * { transition: translate 500ms cubic-bezier(.2,.8,.2,1); }
+.anim .l-hero-art .l-books { translate: calc(var(--px, 0) * 16px) calc(var(--py, 0) * 12px); }
+.anim .l-hero-art .l-glow { translate: calc(var(--px, 0) * 8px) calc(var(--py, 0) * 6px); }
+.anim .l-hero-art .cloud { translate: calc(var(--px, 0) * -22px) calc(var(--py, 0) * -10px); }
+.anim .l-hero-art .doodle-star { translate: calc(var(--px, 0) * 30px) calc(var(--py, 0) * 22px); }
+.anim .landing:not(.landing-intro) .l-books { animation: l-breathe 5s ease-in-out infinite; }
+@keyframes l-breathe { 50% { scale: 1.018; } }
+.anim .l-glow { animation: l-glow-pulse 4s ease-in-out infinite; }
+@keyframes l-glow-pulse { 50% { opacity: 0.7; } }
+
+.l-place, .l-preview-tilt { transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform 220ms ease-out, box-shadow 200ms ease, translate 200ms ease; }
+.l-place:hover { transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); translate: 0 -4px; }
+.l-preview-tilt { transform-style: preserve-3d; }
+.anim .l-place:hover .l-place-art .lumo { animation: cheer-hop 0.5s var(--ease-pop) 1; }
+
+.anim .landing .reveal > * { opacity: 0; transform: translateY(14px); transition: opacity 520ms ease, transform 520ms cubic-bezier(.2,.8,.2,1); }
+.anim .landing .reveal.in > * { opacity: 1; transform: none; }
+.anim .landing .reveal.in > :nth-child(2) { transition-delay: 90ms; }
+.anim .landing .reveal.in > :nth-child(3) { transition-delay: 180ms; }
+.anim .landing .reveal.in > :nth-child(4) { transition-delay: 270ms; }
+.anim .landing .reveal .l-places > *, .anim .landing .reveal .l-flow > *, .anim .landing .reveal .l-moods > * { opacity: 0; transform: translateY(14px); transition: opacity 480ms ease, transform 480ms cubic-bezier(.2,.8,.2,1); }
+.anim .landing .reveal.in .l-places > *, .anim .landing .reveal.in .l-flow > *, .anim .landing .reveal.in .l-moods > * { opacity: 1; transform: none; }
+.anim .landing .reveal.in :is(.l-places, .l-flow, .l-moods) > :nth-child(2) { transition-delay: 220ms; }
+.anim .landing .reveal.in :is(.l-places, .l-flow, .l-moods) > :nth-child(3) { transition-delay: 320ms; }
+.anim .landing .reveal.in :is(.l-places, .l-flow, .l-moods) > :nth-child(4) { transition-delay: 420ms; }
+.anim .landing .reveal.in :is(.l-places, .l-flow, .l-moods) > :nth-child(5) { transition-delay: 520ms; }
+.anim .landing .reveal.in :is(.l-places, .l-flow, .l-moods) > :nth-child(6) { transition-delay: 620ms; }
+.anim .landing .l-moods li:hover .lumo { animation: cheer-hop 0.5s var(--ease-pop) 1; }
+.anim .l-flow-step:hover .l-flow-icon { animation: pop 320ms var(--ease-pop); }
+.anim .l-btn.navy::after, .anim .l-btn.yellow::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%);
+  background-size: 250% 100%; background-position: 130% 0; transition: background-position 700ms ease;
+}
+.l-btn { position: relative; overflow: hidden; }
+.anim .l-btn.navy:hover::after, .anim .l-btn.yellow:hover::after { background-position: -30% 0; }
+.anim .l-btn:hover svg { transform: translateX(3px); transition: transform 180ms ease; }

@@ -187,6 +187,12 @@ function LumoShelf() {
         {!personal.interests.length && <button type="button" className="link" onClick={() => navigate('/me')}>Tell Lumo what you like</button>}
       </div>
       {error && <p className="banner" role="alert">{error}</p>}
+      {busy && (
+        <div className="story-card sketch writing" aria-hidden="true">
+          <Lumo pose="laptop" size={70} motion="float" />
+          <span className="shimmer" style={{ width: '70%' }} /><span className="shimmer" style={{ width: '90%' }} /><span className="shimmer" style={{ width: '55%' }} />
+        </div>
+      )}
       {stories && stories.length > 0 && (
         <div className="cards">
           {stories.slice(0, 6).map((s) => (
