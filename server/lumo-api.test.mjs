@@ -119,14 +119,15 @@ describe('Fish Audio voice', () => {
       calls.push({ url, init });
       return new Response(Buffer.from('ID3fake-mp3'), { status: 200 });
     };
-    const r = await callSpeech({ text: 'rabbit', style: 'word', voice: 'voice123' });
+    const text = `rabbit ${Math.random().toString(36).replace(/[^a-z]/g, '').slice(0, 6)}`; // fresh, so no cache hit
+    const r = await callSpeech({ text, style: 'word', voice: 'voice123' });
     expect(r.status).toBe(200);
     expect(r.headers['content-type']).toBe('audio/mpeg');
     expect(calls[0].url).toBe('https://api.fish.audio/v1/tts');
     expect(calls[0].init.headers.model).toBe('s2.1-pro-free');
     expect(calls[0].init.headers.authorization).toBe('Bearer fish-test');
     const sent = JSON.parse(calls[0].init.body);
-    expect(sent).toMatchObject({ text: 'rabbit', reference_id: 'voice123', format: 'mp3' });
+    expect(sent).toMatchObject({ text, reference_id: 'voice123', format: 'mp3' });
     expect(sent.prosody.speed).toBeLessThan(1);
   });
 
@@ -135,7 +136,7 @@ describe('Fish Audio voice', () => {
     if (!(await localEngine())) return; // no espeak-ng/Piper on this machine
     process.env.FISH_API_KEY = 'fish-test';
     globalThis.fetch = async () => new Response('quota', { status: 402 });
-    const r = await callSpeech({ text: 'Fresh line for the quota test.', style: 'lumo' });
+    const r = await callSpeech({ text: `Quota test ${Math.random().toString(36).replace(/[^a-z]/g, '')}.`, style: 'lumo' });
     expect(r.status).toBe(200);
     expect(r.headers['x-lumo-voice']).toBe('local');
   });

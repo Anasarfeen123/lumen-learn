@@ -219,6 +219,10 @@ export function SpellerGame({ word, level, index, idle, firstStreak, onResolved,
         e.preventDefault();
         void sayBeats();
       } else if (e.key === 'Enter' && el.tagName !== 'BUTTON') {
+        // One press, one step: stop the browser from also pressing the button that gets focus next
+        // (the feedback sheet focuses Continue), and ignore a held-down key.
+        e.preventDefault();
+        if (e.repeat) return;
         if (phase === 'answer') check();
         else if (phase === 'almost') tryAgain();
         else if (phase === 'correct' || phase === 'shown') onContinue();

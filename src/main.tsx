@@ -10,17 +10,25 @@ import '@fontsource/atkinson-hyperlegible/latin-400.css';
 import '@fontsource/atkinson-hyperlegible/latin-700.css';
 import '@fontsource/opendyslexic/latin-400.css';
 import '@fontsource/opendyslexic/latin-700.css';
+import '@fontsource/fredoka/latin-500.css';
+import '@fontsource/fredoka/latin-600.css';
+import '@fontsource/nunito/latin-400.css';
+import '@fontsource/nunito/latin-600.css';
+import '@fontsource/nunito/latin-700.css';
 import './styles/global.css';
 import { LumenProvider } from './state/store';
 import { RouterProvider } from './router';
 import { App } from './App';
+import { AuthProvider } from './account/auth';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RouterProvider>
-      <LumenProvider>
-        <App />
-      </LumenProvider>
+      <AuthProvider>
+        <LumenProvider>
+          <App />
+        </LumenProvider>
+      </AuthProvider>
     </RouterProvider>
   </StrictMode>,
 );

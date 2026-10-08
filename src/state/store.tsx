@@ -1,5 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { createStorage, newProfile, type Profile, type Settings } from './profile';
+import { createStorage, migrate, newProfile, type Profile, type Settings } from './profile';
+import { api, onSignOut, useAuth } from '../account/auth';
+import { jsonSaver, loadProfile, ProfileSaver } from '../account/remote';
+import { setLocalLibrary, setRemoteLibrary, type LibraryState } from '../library/progress';
+import { setUploadsBackend } from '../library/uploads';
+import { loadPersonal, setPersonalBackend } from '../personal/personal';
 import { demoProfile } from './demo';
 import { rollWeekSnapshot, type RoundMode, type RoundSummary } from '../engine/session';
 import type { RoundItem } from '../engine/practice';
@@ -38,6 +43,12 @@ interface LumenContext {
   profile: Profile;
   update: (fn: (p: Profile) => Profile) => void;
   storageOk: boolean;
+  /** Where progress is kept: this device, or the learner's account. */
+  savedIn: 'device' | 'account';
+  /** False while a signed-in learner's data is loading from the database. */
+  dataReady: boolean;
+  /** False when the last save to the account failed (it is retried). */
+  syncOk: boolean;
   /** Mastery when the app opened, used to detect improvement this session. */
   sessionStart: Mastery;
   go: (s: Screen) => void;
@@ -86,7 +97,84 @@ export function LumenProvider({ children }: { children: ReactNode }) {
   const systemReduced = usePrefersReducedMotion();
   const reducedMotion = profile.settings.motion === 'reduced' || (profile.settings.motion === 'system' && systemReduced);
 
-  useEffect(() => { storage.save(profile); }, [profile, storage]);
+  // ---- Where the profile lives: this device (guests) or the account database.
+  const { auth } = useAuth();
+  const userId = auth.status === 'signedIn' ? auth.user.id : null;
+  const ownerRef = useRef<string | null>(null);
+  const saverRef = useRef<ProfileSaver<Profile> | null>(null);
+  const skipSaveRef = useRef(false);
+  const [dataReady, setDataReady] = useState(true);
+  const [syncOk, setSyncOk] = useState(true);
+
+  useEffect(() => {
+    if (auth.status === 'loading') { setDataReady(false); return; }
+    if (!userId) {
+      setDataReady(true);
+      if (ownerRef.current) {
+        // Signed out: nothing of the account stays in memory; back to this device's guest data.
+        ownerRef.current = null;
+        saverRef.current = null;
+        setUploadsBackend(false);
+        setLocalLibrary();
+        setPersonalBackend(false);
+        skipSaveRef.current = true;
+        const local = rollWeekSnapshot(storage.load() ?? newProfile());
+        setProfile(local);
+        setSessionStart(structuredClone(local.mastery));
+      }
+      return;
+    }
+    if (ownerRef.current === userId) return;
+    let alive = true;
+    setDataReady(false);
+    void (async () => {
+      try {
+        const [remote, lib] = await Promise.all([
+          loadProfile<Profile>(),
+          api<{ data: Partial<LibraryState> | null }>('/api/data/library'),
+        ]);
+        if (!alive) return;
+        const lsave = jsonSaver('/api/data/library');
+        setRemoteLibrary(lib.data?.data ?? null, (s) => lsave.schedule(s));
+        setUploadsBackend(true);
+        setPersonalBackend(true);
+        await loadPersonal().catch(() => {});
+        const fresh = remote.data ? rollWeekSnapshot(migrate(remote.data)) : { ...newProfile(), name: auth.status === 'signedIn' ? auth.user.name : '' };
+        ownerRef.current = userId;
+        saverRef.current = new ProfileSaver<Profile>(remote.version,
+          (server) => { skipSaveRef.current = true; setProfile(rollWeekSnapshot(migrate(server))); },
+          setSyncOk);
+        if (remote.data) skipSaveRef.current = true;
+        setProfile(fresh);
+        setSessionStart(structuredClone(fresh.mastery));
+        setDataReady(true);
+      } catch {
+        if (alive) { setSyncOk(false); setDataReady(true); }
+      }
+    })();
+    return () => { alive = false; };
+  }, [auth, userId, storage]);
+
+  useEffect(() => {
+    if (skipSaveRef.current) { skipSaveRef.current = false; return; }
+    if (ownerRef.current) saverRef.current?.schedule(profile);
+    else if (auth.status !== 'signedIn' && auth.status !== 'loading') storage.save(profile);
+  }, [profile, storage, auth.status]);
+
+  // Don't lose the last answer when the tab closes.
+  useEffect(() => {
+    const flush = () => { void saverRef.current?.flush(); };
+    window.addEventListener('pagehide', flush);
+    return () => window.removeEventListener('pagehide', flush);
+  }, []);
+
+  // Logging out clears what's private on this device: speech, word help for uploads, page memory.
+  useEffect(() => onSignOut(async () => {
+    stopSpeaking();
+    await saverRef.current?.flush();
+    forgetWordHelp();
+    try { sessionStorage.clear(); } catch { /* blocked */ }
+  }), []);
   useEffect(() => { void loadStatus(); }, []);
   // The learner's name never leaves the device, including in the natural voice.
   useEffect(() => {
@@ -137,7 +225,7 @@ export function LumenProvider({ children }: { children: ReactNode }) {
 
   const reset = useCallback(async (opts: { everything?: boolean } = {}) => {
     stopSpeaking();
-    storage.clear();
+    if (!userId) storage.clear();
     forgetLibrary();
     forgetWordHelp();
     await clearUploads();
@@ -156,7 +244,8 @@ export function LumenProvider({ children }: { children: ReactNode }) {
   }, [storage, navigate]);
 
   const value: LumenContext = {
-    profile, update, storageOk: storage.available, sessionStart, go, reducedMotion,
+    profile, update, storageOk: storage.available || Boolean(userId), sessionStart, go, reducedMotion,
+    savedIn: userId ? 'account' : 'device', dataReady, syncOk,
     loadDemo, reset, say, speakWord, speakParts, announce,
   };
 

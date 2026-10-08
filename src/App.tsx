@@ -1,10 +1,12 @@
 import { useEffect, type ReactNode } from 'react';
 import { useRouter, match } from './router';
+import { useAuth, type AuthState } from './account/auth';
+import { AuthPage, MePage } from './account/AccountPages';
 import { useLumen } from './state/store';
 import { WobbleDefs } from './components/Doodles';
 import { Shell } from './components/Shell';
 import { Lumo } from './components/Lumo';
-import { Hero } from './screens/Hero';
+import { Hero, AboutPage } from './screens/Hero';
 import { Welcome } from './screens/Welcome';
 import { Hub } from './screens/Hub';
 import { GameScreen } from './screens/games/GameScreen';
@@ -13,7 +15,7 @@ import { Closet } from './screens/Closet';
 import { ProgressPage } from './screens/Progress';
 import { Settings } from './screens/Settings';
 import { GrownUpGate } from './screens/GrownUp';
-import { Library, AddReading, ReviewUpload, ReadStory, ReadUpload } from './library/LibraryPages';
+import { Library, AddReading, ReviewUpload, ReadStory, ReadUpload, ReadLumoStory } from './library/LibraryPages';
 import { Playground, PlaygroundGame } from './playground/Playground';
 import { ActivityScreen } from './classroom/ActivityScreen';
 import { isGame, type RoundMode, type RoundSummary } from './engine/session';
@@ -45,9 +47,29 @@ function NotFound() {
 }
 
 /** Resolves the current URL to a screen. `bare` screens hide the section navigation. */
-function resolve(path: string, state: unknown, onboarded: boolean): { node: ReactNode; bare?: boolean; title: string } {
+/** Pages anyone can open. Everything else needs an account or guest mode. */
+const PUBLIC = ['/', '/login', '/signup', '/about'];
+
+function Loading() {
+  return (
+    <main className="screen loading-screen" id="main" aria-busy="true">
+      <Lumo pose="loading" size={120} />
+      <p className="hand">Getting your things ready…</p>
+    </main>
+  );
+}
+
+function resolve(path: string, search: string, state: unknown, onboarded: boolean, auth: AuthState, dataReady: boolean): { node: ReactNode; bare?: boolean; title: string } {
   let m: Record<string, string> | null;
   if (path === '/') return { node: <Hero />, bare: true, title: 'Lumen' };
+  if (path === '/about') return { node: <AboutPage />, bare: true, title: 'About' };
+  if (path === '/login') return { node: <AuthPage mode="login" />, bare: true, title: 'Log in' };
+  if (path === '/signup') return { node: <AuthPage mode="signup" />, bare: true, title: 'Make an account' };
+  if (!PUBLIC.includes(path)) {
+    if (auth.status === 'loading' || !dataReady) return { node: <Loading />, bare: true, title: 'Loading' };
+    if (auth.status === 'signedOut') return { node: <Redirect to={`/login?next=${encodeURIComponent(path + search)}`} />, bare: true, title: 'Log in' };
+  }
+  if (path === '/me') return { node: <MePage />, title: 'About me' };
   if (path === '/start') return { node: onboarded ? <Redirect to="/classroom" /> : <Welcome />, bare: true, title: 'Welcome' };
   if (path.startsWith('/classroom') && !onboarded) return { node: <Redirect to="/start" />, bare: true, title: 'Welcome' };
   if (path === '/classroom') return { node: <Hub />, title: 'Classroom' };
@@ -68,6 +90,7 @@ function resolve(path: string, state: unknown, onboarded: boolean): { node: Reac
   if (path === '/library/add') return { node: <AddReading />, title: 'Add reading' };
   if ((m = match('/library/review/:id', path))) return { node: <ReviewUpload id={m.id} />, title: 'Check the text' };
   if ((m = match('/library/read/story/:id', path))) return { node: <ReadStory id={m.id} />, bare: true, title: 'Reading' };
+  if ((m = match('/library/read/lumo/:id', path))) return { node: <ReadLumoStory id={m.id} />, bare: true, title: 'Reading' };
   if ((m = match('/library/read/upload/:id', path))) return { node: <ReadUpload id={m.id} />, bare: true, title: 'Reading' };
   if (path === '/playground') return { node: <Playground />, title: 'Playground' };
   if ((m = match('/playground/:game', path))) return { node: <PlaygroundGame id={m.game} />, bare: true, title: 'Playground' };
@@ -78,8 +101,9 @@ function resolve(path: string, state: unknown, onboarded: boolean): { node: Reac
 
 export function App() {
   const { location } = useRouter();
-  const { profile } = useLumen();
-  const { node, bare, title } = resolve(location.path, location.state, profile.onboarded);
+  const { profile, dataReady } = useLumen();
+  const { auth } = useAuth();
+  const { node, bare, title } = resolve(location.path, location.query.toString() ? `?${location.query.toString()}` : '', location.state, profile.onboarded, auth, dataReady);
 
   // Each page sets a clear title and moves focus to its heading. (Speech from the page
   // before is stopped at navigation time, so the new page's first words aren't cut off.)

@@ -23,7 +23,7 @@ import { FishError, fishConfigured, fishDefaultVoice, fishSynthesize, fishVoices
 
 const CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 /** Spoken lines are kept on disk too, so restarts never spend the speech quota again. */
-const DISK_CACHE = fileURLToPath(new URL('../.cache/lumo-voice/', import.meta.url));
+const DISK_CACHE = process.env.LUMO_CACHE_DIR ? `${process.env.LUMO_CACHE_DIR.replace(/\/$/, '')}/lumo-voice/` : fileURLToPath(new URL('../.cache/lumo-voice/', import.meta.url));
 const SPEECH_URL = 'https://api.groq.com/openai/v1/audio/speech';
 const MAX_BODY = 16 * 1024;
 
@@ -221,7 +221,7 @@ export async function explainWords(items, timeoutMs = 8000) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Chat completion with JSON output and one retry on rate limits or server errors, within a deadline. */
-async function chatJson(system, user, timeoutMs, maxTokens = 300) {
+export async function chatJson(system, user, timeoutMs, maxTokens = 300) {
   const deadline = Date.now() + timeoutMs;
   const model = await resolveModel();
   for (let attempt = 0; attempt < 2; attempt++) {

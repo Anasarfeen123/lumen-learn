@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter, sectionOf } from '../router';
 import { useLumen } from '../state/store';
+import { useAuth } from '../account/auth';
 import { stopSpeaking } from '../services/speech';
 import { Modal } from './ui';
 
@@ -44,9 +45,11 @@ function ClassIcon() {
   );
 }
 
-/** The account menu: this device's learner profile. Lumen has no accounts by design. */
+/** The account menu: who is learning, and where their progress is kept. */
 function AccountMenu() {
   const { profile, go, reset } = useLumen();
+  const { auth, logOut, exitGuest } = useAuth();
+  const [busy, setBusy] = useState(false);
   const { navigate } = useRouter();
   const [open, setOpen] = useState(false);
   const [forget, setForget] = useState(false);
@@ -65,11 +68,22 @@ function AccountMenu() {
     };
   }, [open]);
 
-  const exit = () => {
-    // Progress is saved on every answer; exiting just stops sound and goes home.
+  const signOut = async () => {
+    // Ends the session on the server, clears private data here, and replaces history
+    // so "back" can't reopen a signed-in page.
+    setBusy(true);
     stopSpeaking();
     setOpen(false);
-    navigate('/');
+    await logOut();
+    setBusy(false);
+    navigate('/', { replace: true });
+  };
+
+  const leaveGuest = () => {
+    stopSpeaking();
+    setOpen(false);
+    exitGuest();
+    navigate('/', { replace: true });
   };
 
   const initial = (profile.name || 'Me').slice(0, 1).toUpperCase();
@@ -81,13 +95,21 @@ function AccountMenu() {
       </button>
       {open && (
         <div className="menu sketch" role="menu" aria-label="Account">
-          <p className="menu-note">Progress is saved on this device. Lumen has no accounts or passwords.</p>
+          <p className="menu-note">{auth.status === 'signedIn' ? <>Signed in as <b>{auth.user.email}</b>. Progress is saved to your account.</> : 'Guest: progress is saved on this device only.'}</p>
+          <button type="button" role="menuitem" onClick={() => { setOpen(false); navigate('/me'); }}>About me</button>
           <button type="button" role="menuitem" onClick={() => { setOpen(false); go({ name: 'settings' }); }}>Settings</button>
           <button type="button" role="menuitem" onClick={() => { setOpen(false); go({ name: 'grownup' }); }}>For grown-ups</button>
           <button type="button" role="menuitem" onClick={() => { setOpen(false); go({ name: 'closet' }); }}>Lumo's closet</button>
           <hr />
-          <button type="button" role="menuitem" onClick={exit}>Exit to start page</button>
-          <button type="button" role="menuitem" className="danger-soft" onClick={() => { setOpen(false); setForget(true); }}>Forget this device…</button>
+          {auth.status === 'signedIn' ? (
+            <button type="button" role="menuitem" onClick={() => void signOut()} disabled={busy}>{busy ? 'Logging out…' : 'Log out'}</button>
+          ) : (
+            <>
+              <button type="button" role="menuitem" onClick={() => { setOpen(false); navigate('/signup'); }}>Make an account</button>
+              <button type="button" role="menuitem" onClick={leaveGuest}>Exit guest mode</button>
+              <button type="button" role="menuitem" className="danger-soft" onClick={() => { setOpen(false); setForget(true); }}>Forget this device…</button>
+            </>
+          )}
         </div>
       )}
       {forget && (

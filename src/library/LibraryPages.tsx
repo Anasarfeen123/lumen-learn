@@ -6,11 +6,15 @@ import { pictureFor } from '../data/pictures';
 import { getStory, listStories, readingMinutes, TOPICS, type Story } from './content';
 import { getPosition, inProgress, isFinished } from './progress';
 import {
-  deleteUpload, fileHash, findExtraction, getUpload, listUploads, newId, readerPages, saveUpload,
+  deleteUpload, fileHash, findExtraction, getUpload, listUploads, newId, readerPages, saveUpload, uploadFile,
   type ExtractedPage, type Upload, type UploadKind,
 } from './uploads';
 import { extractFile, getCapabilities, type Capabilities, type ExtractFailure, type ExtractProgress } from './extractClient';
 import { Reader } from './Reader';
+import { useLumen } from '../state/store';
+import {
+  deleteLumoStory, effectiveInterests, getLumoStory, INTERESTS, listLumoStories, setFeeling, usePersonal, writeStory, type LumoStory,
+} from '../personal/personal';
 
 const LEVEL_NAME = ['', 'First steps', 'Getting going', 'Growing', 'Confident', 'Adventurous'];
 
@@ -67,6 +71,7 @@ function Stories({ query, setQuery }: { query: URLSearchParams; setQuery: (p: Re
 
   return (
     <>
+      <LumoShelf />
       {continuing.length > 0 && (
         <section aria-labelledby="cont-h" className="continue">
           <h2 id="cont-h" className="title">Continue reading</h2>
@@ -134,6 +139,81 @@ function Stories({ query, setQuery }: { query: URLSearchParams; setQuery: (p: Re
         </div>
       )}
     </>
+  );
+}
+
+/** Stories Lumo wrote for this learner, about what they like, using the words they're practising. */
+function LumoShelf() {
+  const { profile } = useLumen();
+  const { navigate } = useRouter();
+  const personal = usePersonal();
+  const [stories, setStories] = useState<LumoStory[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [remove, setRemove] = useState<LumoStory | null>(null);
+  const liked = effectiveInterests(personal, stories ?? []);
+  const [topic, setTopic] = useState('');
+  const chosen = topic || liked[0] || 'animals';
+  useEffect(() => { void listLumoStories().then(setStories, () => setStories([])); }, [personal]);
+
+  const write = async () => {
+    setBusy(true);
+    setError('');
+    const r = await writeStory(profile, chosen);
+    setBusy(false);
+    if (r.story) navigate(`/library/read/lumo/${r.story.id}`);
+    else setError(r.error ?? '');
+  };
+
+  return (
+    <section className="lumo-shelf" aria-labelledby="lumo-shelf-h">
+      <div className="lumo-shelf-head">
+        <Lumo pose="reading" size={84} motion="none" />
+        <div>
+          <h2 id="lumo-shelf-h" className="title">Stories Lumo wrote for you</h2>
+          <p className="muted">Short stories about what you like, using words you're practising.</p>
+        </div>
+      </div>
+      <div className="lumo-write sketch">
+        <label>
+          <span className="hand">A story about</span>
+          <select className="select" value={chosen} onChange={(e) => setTopic(e.target.value)}>
+            {INTERESTS.map((i) => <option key={i.id} value={i.id}>{i.label}{liked.includes(i.id) ? ' ♥' : ''}</option>)}
+          </select>
+        </label>
+        <button type="button" className="btn primary" onClick={() => void write()} disabled={busy} aria-busy={busy}>
+          {busy ? 'Lumo is writing…' : 'Write me a story'}
+        </button>
+        {!personal.interests.length && <button type="button" className="link" onClick={() => navigate('/me')}>Tell Lumo what you like</button>}
+      </div>
+      {error && <p className="banner" role="alert">{error}</p>}
+      {stories && stories.length > 0 && (
+        <div className="cards">
+          {stories.slice(0, 6).map((s) => (
+            <div key={s.id} className="story-card sketch lumo-made">
+              <button type="button" className="story-open" onClick={() => navigate(`/library/read/lumo/${s.id}`)}>
+                {(() => { const pic = pictureFor(s.cover); return pic ? <Picture picture={pic} className="cover" /> : null; })()}
+                <span className="story-title">{s.title}</span>
+                <span className="story-meta">
+                  <span className="pill">Level {s.level}</span>
+                  <span className="pill">By Lumo</span>
+                  {isFinished('lumo', s.id) && <span className="pill done">Finished ✓</span>}
+                  {s.feeling === 'loved' && <span className="pill">Loved it</span>}
+                </span>
+              </button>
+              <button type="button" className="link small" onClick={() => setRemove(s)} aria-label={`Remove ${s.title}`}>Remove</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {remove && (
+        <div className="inline-confirm sketch" role="alertdialog" aria-labelledby="rm-h">
+          <p id="rm-h">Remove “{remove.title}”?</p>
+          <button type="button" className="btn small" onClick={() => setRemove(null)}>Keep it</button>
+          <button type="button" className="btn small amber" onClick={() => { void deleteLumoStory(remove.id).then(() => listLumoStories().then(setStories)); setRemove(null); }}>Remove</button>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -405,7 +485,7 @@ export function ReviewUpload({ id }: { id: string }) {
     void getUpload(id).then((u) => {
       setUpload(u ?? null);
       if (u) setText(u.confirmed ?? u.raw?.text ?? '');
-      if (u?.file && u.kind !== 'txt') setFileUrl(URL.createObjectURL(u.file));
+      if (u && u.kind !== 'txt' && u.kind !== 'text') void uploadFile(u).then((f) => { if (f) setFileUrl(URL.createObjectURL(f)); });
     }, () => setUpload(null));
   }, [id]);
   useEffect(() => () => { if (fileUrl) URL.revokeObjectURL(fileUrl); }, [fileUrl]);
@@ -425,7 +505,8 @@ export function ReviewUpload({ id }: { id: string }) {
 
   const confirm = async () => {
     // The raw transcription is kept untouched; the edited text is saved separately.
-    await saveUpload({ ...upload, confirmed: text });
+    const saved = await saveUpload({ ...upload, confirmed: text });
+    void saved;
     navigate(`/library/read/upload/${upload.id}`, { replace: true });
   };
 
@@ -483,6 +564,7 @@ export function ReviewUpload({ id }: { id: string }) {
 
 export function ReadStory({ id }: { id: string }) {
   const { back, navigate } = useRouter();
+  const personal = usePersonal();
   const story = getStory(id);
   useEffect(() => { document.title = `${story?.title ?? 'Story'} · Lumen`; }, [story]);
   if (!story) {
@@ -496,6 +578,29 @@ export function ReadStory({ id }: { id: string }) {
   return (
     <Reader kind="story" id={story.id} title={story.title} pages={story.pages}
       subtitle={`Level ${story.level}${story.status === 'draft' ? ' · Draft: not reviewed' : ''}`}
+      feeling={{ value: personal.feelings[story.id] ?? null, onChange: (f) => void setFeeling(story.id, f) }}
+      onBack={() => back('/library')} backLabel="Back to Library" />
+  );
+}
+
+export function ReadLumoStory({ id }: { id: string }) {
+  const { back, navigate } = useRouter();
+  const personal = usePersonal();
+  const [story, setStory] = useState<LumoStory | null | undefined>(undefined);
+  useEffect(() => { void getLumoStory(id).then((s) => setStory(s ?? null), () => setStory(null)); }, [id]);
+  if (story === undefined) return <main className="screen"><p className="muted">Opening…</p></main>;
+  if (!story) {
+    return (
+      <main className="screen">
+        <h1 className="title">This story isn't here</h1>
+        <button type="button" className="btn" onClick={() => navigate('/library')}>Back to Library</button>
+      </main>
+    );
+  }
+  return (
+    <Reader kind="lumo" id={story.id} title={story.title} pages={story.pages}
+      subtitle={`Written by Lumo for you · Level ${story.level}`}
+      feeling={{ value: personal.feelings[story.id] ?? story.feeling ?? null, onChange: (f) => void setFeeling(story.id, f) }}
       onBack={() => back('/library')} backLabel="Back to Library" />
   );
 }

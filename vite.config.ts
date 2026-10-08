@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react';
 import { loadEnv } from './server/env.mjs';
 import { lumoApi } from './server/lumo-api.mjs';
 import { extractApi } from './server/extract.mjs';
+import { accountApi } from './server/account-api.mjs';
+import { personalApi } from './server/personal-api.mjs';
 import { logSetup } from './server/setup-log.mjs';
 
 // The same .env loader as `npm start`. Server-only secrets (GROQ_*) stay in the
@@ -21,11 +23,14 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use(lumoApi);
         server.middlewares.use(extractApi);
+        server.middlewares.use(accountApi);
+        server.middlewares.use(personalApi);
         server.httpServer?.once('listening', () => void logSetup(env, (m) => server.config.logger.info(m)));
       },
       configurePreviewServer(server) {
         server.middlewares.use(lumoApi);
         server.middlewares.use(extractApi);
+        server.middlewares.use(accountApi);
       },
     },
   ],

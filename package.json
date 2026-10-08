@@ -5,7 +5,7 @@
   "description": "Lumen: an adaptive literacy game for dyslexic learners, guided by Lumo the firefly.",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "scripts": {
     "dev": "vite",
@@ -24,8 +24,10 @@
   },
   "dependencies": {
     "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "@fontsource/fredoka": "^5.3.0",
     "@fontsource/gaegu": "^5.3.0",
     "@fontsource/lexend": "^5.3.0",
+    "@fontsource/nunito": "^5.3.0",
     "@fontsource/opendyslexic": "^5.3.0",
     "@fontsource/patrick-hand": "^5.3.0",
     "react": "^19.2.0",

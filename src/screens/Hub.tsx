@@ -21,6 +21,7 @@ import { useLumoStatus } from '../services/useLumoStatus';
 import { sfx } from '../services/sfx';
 import { line } from '../data/lines';
 import { ACTIVITIES } from '../classroom/activities';
+import { PlanCard } from '../personal/PlanCard';
 
 export const GAME_META: Record<GameId, { desc: string; hatch: string; accent: string; Icon: typeof Search }> = {
   detective: { desc: 'Spot the right spelling', hatch: 'hatch-lav', accent: 'var(--accent-detective)', Icon: Search },
@@ -306,6 +307,8 @@ export function Hub() {
             </div>
             {profile.streak.days > 0 && <p className="muted"><Flame size={18} /> {profile.streak.days} {profile.streak.days === 1 ? 'day' : 'days'} in a row</p>}
           </section>
+
+          <PlanCard />
 
           <section className="keep-going">
             <div>

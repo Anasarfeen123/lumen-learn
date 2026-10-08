@@ -10,3 +10,4 @@ coverage/
 .vite/
 smoke-shots/
 .cache/
+data/

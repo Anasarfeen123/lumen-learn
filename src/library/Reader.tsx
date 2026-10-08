@@ -6,6 +6,13 @@ import { readAloud, speak, stopSpeaking, deviceSpeechSupported, type ReadAloud }
 import { useLumen } from '../state/store';
 import { Lumo } from '../components/Lumo';
 import { Arrow, Close, Speaker } from '../components/Icons';
+import type { Feeling } from '../personal/personal';
+
+const FEELINGS: { id: Feeling; label: string; pose: 'love' | 'happy' | 'thinking' }[] = [
+  { id: 'loved', label: 'Loved it', pose: 'love' },
+  { id: 'ok', label: 'It was OK', pose: 'happy' },
+  { id: 'not-for-me', label: 'Not for me', pose: 'thinking' },
+];
 
 interface Props {
   kind: ReadingKind;
@@ -16,6 +23,8 @@ interface Props {
   backLabel: string;
   /** Shown under the title, e.g. "Your upload" or the story level. */
   subtitle?: string;
+  /** Ask "How was this story?" on the last page; the answer helps Lumo choose what comes next. */
+  feeling?: { value: Feeling | null; onChange: (f: Feeling) => void };
 }
 
 interface Prefs { size: number; spacing: number; width: 'narrow' | 'medium' | 'wide'; focus: boolean; rate: number }
@@ -29,7 +38,7 @@ function loadPrefs(): Prefs {
 type Playback = 'stopped' | 'playing' | 'paused';
 
 /** The whole-word reader used for stories and confirmed uploads. */
-export function Reader({ kind, id, title, pages, onBack, backLabel, subtitle }: Props) {
+export function Reader({ kind, id, title, pages, onBack, backLabel, subtitle, feeling }: Props) {
   const { profile } = useLumen();
   const saved = useMemo(() => getPosition(kind, id), [kind, id]);
   const [page, setPage] = useState(() => Math.min(saved?.page ?? 0, pages.length - 1));
@@ -251,6 +260,21 @@ export function Reader({ kind, id, title, pages, onBack, backLabel, subtitle }: 
             <Speaker size={18} /> Read these words
           </button>
         </div>
+      )}
+
+      {last && feeling && (
+        <section className="feeling sketch" aria-labelledby="feeling-h">
+          <h2 id="feeling-h" className="hand">How was this story?</h2>
+          <div className="feeling-row" role="radiogroup" aria-labelledby="feeling-h">
+            {FEELINGS.map((f) => (
+              <button key={f.id} type="button" role="radio" aria-checked={feeling.value === f.id}
+                className={`feeling-btn ${feeling.value === f.id ? 'on' : ''}`} onClick={() => feeling.onChange(f.id)}>
+                <Lumo pose={f.pose} size={44} motion="none" /> {f.label}
+              </button>
+            ))}
+          </div>
+          {feeling.value && <p className="muted small">Thanks! Lumo will use this to pick your next stories.</p>}
+        </section>
       )}
 
       <nav className="page-nav" aria-label="Pages">

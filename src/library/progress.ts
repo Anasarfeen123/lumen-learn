@@ -1,7 +1,7 @@
 // Reading position, bookmarks and "continue reading", per story or upload.
 // Kept in this browser only, like the rest of the learner's data.
 
-export type ReadingKind = 'story' | 'upload';
+export type ReadingKind = 'story' | 'upload' | 'lumo';
 
 export interface Position {
   page: number;
@@ -17,26 +17,46 @@ export interface Bookmark {
   t: string;
 }
 
-interface LibraryState {
+export interface LibraryState {
   positions: Record<string, Position>;
   bookmarks: Record<string, Bookmark[]>;
   last: { kind: ReadingKind; id: string; title: string; t: string } | null;
   finished: Record<string, string>;
 }
 
-const KEY = 'lumen.library.v1';
+const GUEST_KEY = 'lumen.library.v1';
 const empty = (): LibraryState => ({ positions: {}, bookmarks: {}, last: null, finished: {} });
 
+/**
+ * Where reading progress lives: this device (guests), or the database for a
+ * signed-in learner (kept in memory here and synced; nothing left behind on sign-out).
+ */
+let remote: { state: LibraryState; push: (s: LibraryState) => void } | null = null;
+
+export function setRemoteLibrary(state: Partial<LibraryState> | null, push: (s: LibraryState) => void) {
+  remote = { state: { ...empty(), ...(state ?? {}) }, push };
+}
+
+export function setLocalLibrary() {
+  remote = null;
+}
+
 function load(): LibraryState {
+  if (remote) return structuredClone(remote.state);
   try {
-    return { ...empty(), ...JSON.parse(localStorage.getItem(KEY) ?? '{}') };
+    return { ...empty(), ...JSON.parse(localStorage.getItem(GUEST_KEY) ?? '{}') };
   } catch {
     return empty();
   }
 }
 
 function save(s: LibraryState) {
-  try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* storage full or blocked */ }
+  if (remote) {
+    remote.state = s;
+    remote.push(s);
+    return;
+  }
+  try { localStorage.setItem(GUEST_KEY, JSON.stringify(s)); } catch { /* storage full or blocked */ }
 }
 
 const k = (kind: ReadingKind, id: string) => `${kind}:${id}`;
@@ -90,7 +110,8 @@ export function lastReading() {
 }
 
 export function forgetLibrary() {
-  try { localStorage.removeItem(KEY); } catch { /* nothing to clear */ }
+  if (remote) { remote.state = empty(); remote.push(remote.state); return; }
+  try { localStorage.removeItem(GUEST_KEY); } catch { /* nothing to clear */ }
 }
 
 /** How many stories (not uploads) have been read to the end. */

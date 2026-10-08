@@ -1,0 +1,19 @@
+# Render Blueprint: New → Blueprint → pick this repo. Add GROQ_API_KEY (and the
+# optional voice keys) when asked. The disk keeps accounts across deploys.
+services:
+  - type: web
+    name: lumen-learn
+    runtime: docker
+    plan: starter
+    healthCheckPath: /healthz
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: FISH_API_KEY
+        sync: false
+      - key: FISH_VOICE_ID
+        sync: false
+    disk:
+      name: lumen-data
+      mountPath: /data
+      sizeGB: 1

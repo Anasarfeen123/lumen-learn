@@ -117,7 +117,9 @@ try {
   await journey('Hero → onboarding → Classroom', async () => {
     await pause(page, 2800);
     await shot(page, 'hero');
-    await page.getByRole('button', { name: /Start learning/ }).click();
+    await page.getByRole('button', { name: /Start learning/ }).first().click();
+    await page.getByRole('heading', { name: 'Make your account' }).waitFor();
+    await page.getByRole('button', { name: 'Try it as a guest' }).click();
     await page.getByLabel('What should Lumo call you?').fill('Sam');
     await page.getByRole('button', { name: /Let's go/ }).click();
     await page.locator('.lesson-list').waitFor();
@@ -206,7 +208,7 @@ try {
 
   await journey('Library → story → whole-word help → pronunciation → return (filters kept)', async () => {
     await page.getByRole('link', { name: /Library/ }).first().click();
-    await page.getByRole('combobox').first().selectOption('1');
+    await page.getByRole('combobox', { name: 'Level' }).selectOption('1');
     await page.locator('.story-card', { hasText: 'Pip the Pup' }).click();
     await page.locator('.read-text').waitFor();
     // Tap near the edge of a word: the whole word is still the unit.
@@ -222,7 +224,7 @@ try {
     await page.getByText('Page 2 of 4').first().waitFor();
     await page.getByRole('button', { name: /Back to Library/ }).click();
     await page.locator('.story-card').first().waitFor();
-    if ((await page.getByRole('combobox').first().inputValue()) !== '1') throw new Error('level filter was lost');
+    if ((await page.getByRole('combobox', { name: 'Level' }).inputValue()) !== '1') throw new Error('level filter was lost');
   });
 
   await journey('Reader keyboard: arrows move word by word; Enter opens help; Esc closes', async () => {
@@ -313,6 +315,11 @@ try {
     await page.locator('.lesson-list').waitFor();
     await page.goForward();
     await page.locator('.play-card').first().waitFor();
+    // Progress → Classroom tab really goes to the Classroom.
+    await page.getByRole('link', { name: /Progress/ }).first().click();
+    await page.waitForURL(/\/classroom\/progress/);
+    await page.getByRole('link', { name: /Classroom/ }).first().click();
+    await page.locator('.lesson-list').waitFor();
   });
 
   await journey('Shortcuts: "?" lists them, Alt+2 opens the Library', async () => {
@@ -322,6 +329,21 @@ try {
     await page.keyboard.press('Escape');
     await page.keyboard.press('Alt+2');
     await page.locator('.subtabs').waitFor();
+  });
+
+  await journey('Enter checks first; only a second Enter moves on', async () => {
+    await page.goto(`${APP}/classroom/play/detective`);
+    await page.locator('.sheet').first().waitFor();
+    await page.keyboard.press('1');
+    await page.keyboard.press('Enter');
+    const action = page.locator('.sheet button').last();
+    await action.waitFor();
+    const label = (await action.innerText()).trim();
+    if (!/Continue|Try again/.test(label)) throw new Error(`first Enter didn't stop on feedback (button: ${label})`);
+    await page.waitForTimeout(400);
+    if ((await action.innerText()).trim() !== label) throw new Error('feedback was skipped by the same key press');
+    await page.keyboard.press('Enter');
+    await page.waitForFunction((l) => ![...document.querySelectorAll('.sheet button')].some((b) => b.textContent.trim() === l), label);
   });
 
   await journey('Grown-ups gate (press and hold)', async () => {
@@ -345,11 +367,94 @@ try {
     await page.locator('.account-btn').click();
     await page.getByRole('menuitem', { name: /Forget this device/ }).click();
     await page.getByRole('button', { name: 'Forget', exact: true }).click();
-    await page.getByRole('button', { name: /Start learning/ }).waitFor();
+    await page.getByRole('button', { name: /Start learning/ }).first().waitFor();
+    await page.evaluate(() => localStorage.setItem('lumen.guest', '1'));
     await page.goto(`${APP}/library/read/upload/${uploads[0]}`);
     await page.getByText(/isn't here/).waitFor();
     const p = await profile(page);
     if (p.xp) throw new Error('progress survived');
+  });
+
+  // ------------------------------------------------------------------ accounts
+  const acct = await newPage();
+  const email = `smoke-${Date.now()}@example.com`;
+  await journey('Signed-out visitors are sent to log in, then back to where they were going', async () => {
+    await acct.goto(`${APP}/library`);
+    await acct.waitForURL(/\/login\?next=%2Flibrary/);
+    await acct.getByRole('heading', { name: 'Log in' }).waitFor();
+  });
+
+  await journey('Sign up → progress saved to the database → log out → back is blocked → log in restores it', async () => {
+    await acct.getByRole('link', { name: 'Make an account' }).click();
+    await acct.getByLabel(/What should Lumo call you/).fill('Robin');
+    await acct.getByLabel(/^Email/).fill(email);
+    await acct.getByLabel(/^Password/).fill('a-long-password');
+    await acct.getByRole('button', { name: 'Create account' }).click();
+    await acct.waitForURL(/\/library/); // back to where they were going
+    await acct.goto(`${APP}/classroom`);
+    await acct.waitForURL(/\/start/); // a new account meets Lumo first
+    await acct.getByLabel('What should Lumo call you?').waitFor();
+    await acct.getByRole('button', { name: /Let's go/ }).click();
+    await acct.locator('.lesson-list').waitFor();
+    await acct.locator('.lesson.current .lesson-card').click();
+    await playRound(acct);
+    await acct.getByText('Round complete!').waitFor({ timeout: 20000 });
+    await acct.waitForTimeout(1500); // debounced save
+    const saved = await acct.evaluate(async () => (await (await fetch('/api/data/profile')).json()).data);
+    if (!saved?.xp) throw new Error('progress was not saved to the account');
+    if (await acct.evaluate(() => JSON.parse(localStorage.getItem('lumen.profile.v1') ?? '{}').xp)) throw new Error('account progress leaked into guest storage');
+    await acct.goto(`${APP}/classroom`);
+    await acct.locator('.account-btn').click();
+    await acct.getByRole('menuitem', { name: 'Log out' }).click();
+    await acct.getByRole('button', { name: /Start learning/ }).first().waitFor();
+    await acct.goBack();
+    await acct.waitForURL(/\/login/);
+    const me = await acct.evaluate(async () => (await (await fetch('/api/auth/me')).json()).user);
+    if (me) throw new Error('session still active after logout');
+    await acct.getByLabel(/^Email/).fill(email);
+    await acct.getByLabel(/^Password/).fill('wrong-password');
+    await acct.getByRole('button', { name: 'Log in' }).click();
+    await acct.getByRole('alert').getByText(/don't match/).waitFor();
+    await acct.getByLabel(/^Password/).fill('a-long-password');
+    await acct.getByRole('button', { name: 'Log in' }).click();
+    await acct.locator('.lesson.done').first().waitFor();
+    await shot(acct, 'account-classroom');
+  });
+
+  await journey('Personalised: pick interests, Lumo plans the day, story feedback is remembered', async () => {
+    await acct.goto(`${APP}/me`);
+    await acct.getByRole('button', { name: 'Space' }).click();
+    await acct.getByRole('button', { name: 'Animals' }).click();
+    await acct.waitForTimeout(400);
+    const personal = await acct.evaluate(async () => (await (await fetch('/api/data/personal')).json()).data);
+    if (!personal?.interests?.includes('space')) throw new Error('interests not saved');
+    await shot(acct, 'about-me');
+    await acct.goto(`${APP}/classroom`);
+    await acct.locator('.plan-step').first().waitFor({ timeout: 15000 });
+    await shot(acct, 'plan');
+    await acct.goto(`${APP}/library/read/story/pip-the-pup`);
+    for (let i = 0; i < 10 && !(await visible(acct.getByRole('button', { name: /I finished/ }))); i++) await acct.getByRole('button', { name: /Next page/ }).click();
+    await acct.getByRole('radio', { name: 'Loved it' }).click();
+    await acct.waitForTimeout(400);
+    const after = await acct.evaluate(async () => (await (await fetch('/api/data/personal')).json()).data);
+    if (after?.feelings?.['pip-the-pup'] !== 'loved') throw new Error('story feeling not saved');
+  });
+
+  await journey('Delete account erases it', async () => {
+    await acct.goto(`${APP}/me`);
+    await acct.getByRole('button', { name: /Delete my account/ }).click();
+    await acct.getByLabel(/Type delete/).fill('delete');
+    await acct.getByRole('button', { name: 'Delete forever' }).click();
+    await acct.getByRole('button', { name: /Start learning/ }).first().waitFor();
+    const r = await acct.evaluate(async (e) => (await fetch('/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json', 'x-lumen': '1' }, body: JSON.stringify({ email: e, password: 'a-long-password' }) })).status, email);
+    if (r !== 401) throw new Error(`deleted account could still log in (${r})`);
+  });
+
+  await journey('Landing page: the lesson preview is real and the page fits a phone', async () => {
+    await acct.goto(APP);
+    await acct.getByRole('radio', { name: 'a' }).click();
+    await acct.getByText(/c-a-t, cat/).waitFor();
+    await shot(acct, 'landing');
   });
 
   // ------------------------------------------------------------------ reduced motion
@@ -363,8 +468,8 @@ try {
   // ------------------------------------------------------------------ phone
   const phone = await newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   await journey('Phone: bottom navigation, Classroom, and tapping words in the reader', async () => {
-    await phone.goto(APP);
-    await phone.evaluate(() => localStorage.setItem('lumen.profile.v1', JSON.stringify({ onboarded: true, name: 'Ana' })));
+    await phone.goto(APP, { waitUntil: 'networkidle' });
+    await phone.evaluate(() => { localStorage.setItem('lumen.profile.v1', JSON.stringify({ onboarded: true, name: 'Ana' })); localStorage.setItem('lumen.guest', '1'); });
     await phone.goto(`${APP}/classroom`);
     await phone.locator('.lesson-list').waitFor();
     await shot(phone, 'phone-classroom');

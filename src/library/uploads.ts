@@ -45,6 +45,40 @@ export interface Upload {
 const DB = 'lumen';
 const STORE = 'uploads';
 
+/** Signed-in learners keep uploads in Lumen's database; guests keep them in this browser. */
+let serverMode = false;
+export function setUploadsBackend(server: boolean) {
+  serverMode = server;
+}
+
+async function req<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method, credentials: 'same-origin',
+    headers: { ...(method !== 'GET' ? { 'x-lumen': '1' } : {}), ...(body !== undefined ? { 'content-type': 'application/json' } : {}) },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 401) throw new Error('Please log in again.');
+  if (!res.ok && res.status !== 204) throw new Error(`Upload request failed (${res.status})`);
+  return (res.status === 204 ? null : await res.json()) as T;
+}
+
+interface ServerUpload extends Omit<Upload, 'file'> { hasFile?: boolean }
+
+/** The original file of a server upload, fetched only when it's needed (for the review screen). */
+export async function uploadFile(u: Upload): Promise<Blob | undefined> {
+  if (u.file) return u.file;
+  if (!serverMode || !(u as ServerUpload).hasFile) return undefined;
+  const res = await fetch(`/api/data/uploads/${u.id}/file`, { credentials: 'same-origin' });
+  return res.ok ? res.blob() : undefined;
+}
+
+async function toBase64(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB, 1);
@@ -67,25 +101,42 @@ async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBReq
 }
 
 export async function listUploads(): Promise<Upload[]> {
+  if (serverMode) return (await req<{ uploads: ServerUpload[] }>('/api/data/uploads')).uploads as Upload[];
   const all = await tx<Upload[]>('readonly', (s) => s.getAll() as IDBRequest<Upload[]>);
   return all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-export function getUpload(id: string): Promise<Upload | undefined> {
+export async function getUpload(id: string): Promise<Upload | undefined> {
+  if (serverMode) {
+    try { return (await req<{ upload: ServerUpload }>(`/api/data/uploads/${encodeURIComponent(id)}`)).upload as Upload; } catch { return undefined; }
+  }
   return tx<Upload | undefined>('readonly', (s) => s.get(id) as IDBRequest<Upload | undefined>);
 }
 
 export async function saveUpload(u: Upload): Promise<Upload> {
+  if (serverMode) {
+    const existing = await getUpload(u.id).catch(() => undefined);
+    if (existing) {
+      return (await req<{ upload: ServerUpload }>(`/api/data/uploads/${u.id}`, 'PUT', { name: u.name, confirmed: u.confirmed, raw: u.raw })).upload as Upload;
+    }
+    const body = { name: u.name, kind: u.kind, mime: u.mime, size: u.size, raw: u.raw, confirmed: u.confirmed, mode: u.mode, fileBase64: u.file ? await toBase64(u.file) : undefined };
+    return (await req<{ upload: ServerUpload }>('/api/data/uploads', 'POST', body)).upload as Upload;
+  }
   const next = { ...u, updatedAt: new Date().toISOString() };
   await tx('readwrite', (s) => s.put(next));
   return next;
 }
 
 export async function deleteUpload(id: string): Promise<void> {
+  if (serverMode) { await req(`/api/data/uploads/${encodeURIComponent(id)}`, 'DELETE'); return; }
   await tx('readwrite', (s) => s.delete(id));
 }
 
 export async function clearUploads(): Promise<void> {
+  if (serverMode) {
+    for (const u of await listUploads().catch(() => [])) await deleteUpload(u.id).catch(() => {});
+    return;
+  }
   try { await tx('readwrite', (s) => s.clear()); } catch { /* nothing stored */ }
 }
 

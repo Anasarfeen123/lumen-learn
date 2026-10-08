@@ -91,7 +91,8 @@ export function RouterProvider({ children }: { children: ReactNode }) {
   const openSection = useCallback((section: 'classroom' | 'library' | 'playground') => {
     const last = loadMemory()[section];
     // Resume list-style pages only; never drop the learner back into the middle of an old round.
-    const resumable = last && !/\/(play|done|activity|read|game|review)\//.test(`${last}/`);
+    // Progress has its own tab, so it's never what "Classroom" resumes to.
+    const resumable = last && !/\/(play|done|activity|read|game|review)\//.test(`${last}/`) && !last.startsWith('/classroom/progress');
     navigate(resumable ? last : `/${section}`);
   }, [navigate]);
 
