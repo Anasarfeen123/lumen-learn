@@ -21,9 +21,13 @@ const IMAGE_TYPES = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'we
 const VISION_MODEL = () => process.env.GROQ_VISION_MODEL || 'qwen/qwen3.8-27b';
 const LOW_CONFIDENCE = 70;
 
+// One thread per OCR job. Hosting containers report many cores but allow only a small share
+// of one; Tesseract's default of a thread per core makes the threads fight and runs ~10x slower.
+const TOOL_ENV = { ...process.env, OMP_THREAD_LIMIT: '1' };
+
 function run(cmd, args, { signal, timeout = 60_000 } = {}) {
   return new Promise((resolve, reject) => {
-    execFile(cmd, args, { signal, timeout, maxBuffer: 64 * 1024 * 1024 }, (err, stdout, stderr) => {
+    execFile(cmd, args, { signal, timeout, maxBuffer: 64 * 1024 * 1024, env: TOOL_ENV }, (err, stdout, stderr) => {
       if (err) {
         err.stderr = String(stderr);
         reject(err);
@@ -181,7 +185,8 @@ async function extractPdf(file, dir, signal, progress) {
     }
     progress({ stage: 'scanning', page: p, pages });
     const prefix = join(dir, `page-${p}`);
-    await run('pdftoppm', ['-f', String(p), '-l', String(p), '-r', '200', '-png', file, prefix], { signal, timeout: 120_000 });
+    // Grayscale at 150 DPI: the same words as colour at 200 DPI, with far fewer pixels to read.
+    await run('pdftoppm', ['-f', String(p), '-l', String(p), '-r', '150', '-gray', '-png', file, prefix], { signal, timeout: 120_000 });
     const img = (await readdir(dir)).find((f) => f.startsWith(`page-${p}`) && f.endsWith('.png'));
     if (!img) { out.push({ page: p, method: 'unavailable', text: '' }); continue; }
     const t = await tesseract(join(dir, img), signal);
@@ -285,8 +290,15 @@ export async function extractApi(req, res, next) {
 
   res.statusCode = 200;
   res.setHeader('content-type', 'application/x-ndjson');
-  res.setHeader('cache-control', 'no-store');
+  // Progress must reach the page as it happens: ask every proxy on the way not to buffer it.
+  res.setHeader('cache-control', 'no-store, no-transform');
+  res.setHeader('x-accel-buffering', 'no');
+  res.flushHeaders?.();
   const write = (obj) => { if (!res.writableEnded) res.write(`${JSON.stringify(obj)}\n`); };
+  // Some proxies hold back the first few KB; a blank padding line (ignored by the client) pushes it through.
+  res.write(`${' '.repeat(2048)}\n`);
+  // A heartbeat while a long page is being read, so nothing on the way closes the connection.
+  const beat = setInterval(() => { if (!res.writableEnded) res.write('\n'); }, 10_000);
   try {
     const result = await extract(Buffer.concat(chunks), { mime, name, mode }, controller.signal, (p) => write({ type: 'progress', ...p }));
     write({ type: 'result', ...result });
@@ -295,6 +307,8 @@ export async function extractApi(req, res, next) {
     const known = e instanceof ExtractError;
     write({ type: 'error', code: known ? e.code : 'failed', message: known ? e.message : 'Something went wrong while reading this file. Please try again.' });
     if (!known) console.error('[extract]', e);
+  } finally {
+    clearInterval(beat);
   }
   res.end();
 }
