@@ -27,10 +27,24 @@ export interface TagRow {
   m: number;
   band: Band;
   examples: string[];
+  /** Improved by a noticeable step since the start of the week. */
+  improving: boolean;
+}
+
+export interface DayActivity {
+  /** Short weekday name, e.g. "Mon". */
+  label: string;
+  date: string;
+  seconds: number;
+  rounds: number;
 }
 
 export interface Report {
   minutes: number;
+  /** Exact practice time this week (minutes alone would show a short week as 0). */
+  seconds: number;
+  /** The last seven days, oldest first. */
+  days: DayActivity[];
   rounds: number;
   games: Record<GameId, number>;
   stronger: TagRow[];
@@ -51,7 +65,16 @@ function examplesFor(p: Profile, tag: Tag): string[] {
 
 function row(p: Profile, tag: Tag): TagRow {
   const m = masteryOf(p.mastery, tag);
-  return { tag, plain: PLAIN_NAME[tag], m, band: band(m), examples: examplesFor(p, tag) };
+  const before = p.weekSnapshot?.mastery ?? {};
+  return { tag, plain: PLAIN_NAME[tag], m, band: band(m), examples: examplesFor(p, tag), improving: m - masteryOf(before, tag) >= 0.1 };
+}
+
+/** "under a minute", "1 minute", "12 minutes". */
+export function practiceTime(seconds: number): string {
+  if (seconds <= 0) return 'no practice yet';
+  if (seconds < 60) return 'under a minute';
+  const m = Math.round(seconds / 60);
+  return `${m} ${m === 1 ? 'minute' : 'minutes'}`;
 }
 
 export function buildReport(p: Profile, now = new Date()): Report {
@@ -62,16 +85,33 @@ export function buildReport(p: Profile, now = new Date()): Report {
 
   const known = (Object.keys(p.mastery) as Tag[]).filter((t) => (p.mastery[t]?.n ?? 0) >= MIN_N);
   const before = p.weekSnapshot?.mastery ?? {};
-  const stronger = known
-    .filter((t) => masteryOf(p.mastery, t) - masteryOf(before, t) >= 0.1)
-    .sort((a, b) => masteryOf(p.mastery, b) - masteryOf(p.mastery, a))
-    .map((t) => row(p, t));
   const tricky = known
     .slice()
     .sort((a, b) => masteryOf(p.mastery, a) - masteryOf(p.mastery, b))
     .filter((t) => masteryOf(p.mastery, t) <= 0.7)
     .slice(0, 3)
     .map((t) => row(p, t));
+  // A skill appears in one list only: a tricky skill that is improving says so in "Still tricky".
+  const isTricky = new Set(tricky.map((r) => r.tag));
+  const stronger = known
+    .filter((t) => !isTricky.has(t) && masteryOf(p.mastery, t) - masteryOf(before, t) >= 0.1)
+    .sort((a, b) => masteryOf(p.mastery, b) - masteryOf(p.mastery, a))
+    .map((t) => row(p, t));
+
+  const days: DayActivity[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - i);
+    const end = d.getTime() + 86_400_000;
+    const inDay = p.rounds.filter((r) => { const t = new Date(r.t).getTime(); return t >= d.getTime() && t < end; });
+    days.push({
+      label: d.toLocaleDateString('en', { weekday: 'short' }),
+      date: d.toISOString().slice(0, 10),
+      seconds: inDay.reduce((s, r) => s + r.seconds, 0),
+      rounds: inDay.length,
+    });
+  }
   const weak = weakestTag(p.mastery, MIN_N) ?? null;
 
   const skills = SKILLS.map(({ label, tags }) => {
@@ -83,6 +123,8 @@ export function buildReport(p: Profile, now = new Date()): Report {
 
   return {
     minutes: Math.round(week.reduce((s, r) => s + r.seconds, 0) / 60),
+    seconds: week.reduce((s, r) => s + r.seconds, 0),
+    days,
     rounds: week.length,
     games,
     stronger,

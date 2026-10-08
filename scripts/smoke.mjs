@@ -352,16 +352,41 @@ try {
     await page.waitForFunction((l) => ![...document.querySelectorAll('.sheet button')].some((b) => b.textContent.trim() === l), label);
   });
 
-  await journey('Grown-ups gate (press and hold)', async () => {
+  await journey('Grown-ups gate: hold to open, a short press does not, and it asks again after leaving', async () => {
+    const holdFor = async (ms) => {
+      await settled(page);
+      const box = await page.getByRole('button', { name: 'Hold to open' }).boundingBox();
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      await pause(page, ms);
+      await page.mouse.up();
+    };
     await page.goto(`${APP}/grown-ups`);
-    const hold = page.getByRole('button', { name: 'Hold to open' });
-    const box = await hold.boundingBox();
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.down();
-    await pause(page, 3300);
-    await page.mouse.up();
+    await holdFor(700); // too short
+    await page.getByText(/Keep holding until the circle is full/).waitFor();
+    if (await visible(page.getByText('This week in brief'))) throw new Error('opened without a full hold');
+    await holdFor(3400);
     await page.getByText('This week in brief').waitFor();
+    await page.getByText('When practice happened').waitFor();
     await shot(page, 'grown-ups');
+    // Leave and come back: the hold is needed again.
+    await page.getByRole('button', { name: 'Back to learning' }).click();
+    await page.locator('.lesson-list').waitFor();
+    await page.goBack();
+    await page.getByRole('button', { name: 'Hold to open' }).waitFor();
+    // Lock closes the notes too, and so does a reload.
+    await holdFor(3400);
+    await page.getByRole('button', { name: /Lock/ }).click();
+    await page.getByRole('button', { name: 'Hold to open' }).waitFor();
+    await holdFor(3400);
+    await page.reload();
+    await page.getByRole('button', { name: 'Hold to open' }).waitFor();
+    // The Classroom tab goes to the Classroom, never back to the grown-up notes.
+    await holdFor(3400);
+    await page.getByText('This week in brief').waitFor();
+    await page.getByRole('link', { name: /Classroom/ }).first().click();
+    await page.locator('.lesson-list').waitFor();
+    if (new URL(page.url()).pathname !== '/classroom') throw new Error(`Classroom tab went to ${page.url()}`);
   });
 
   await journey('Forget this device clears progress and uploads', async () => {

@@ -42,64 +42,6 @@ export function Modal({ title, children, onClose, labelledBy }: { title?: string
   );
 }
 
-/**
- * Press and hold for 3 seconds. Not security: it only keeps a young learner
- * from wandering into the grown-up view by accident.
- */
-export function HoldButton({ onDone, seconds = 3, children }: { onDone: () => void; seconds?: number; children: ReactNode }) {
-  const [progress, setProgress] = useState(0);
-  const start = useRef<number | null>(null);
-  const raf = useRef(0);
-
-  const stop = () => {
-    start.current = null;
-    cancelAnimationFrame(raf.current);
-    setProgress(0);
-  };
-  const tick = (t: number) => {
-    if (start.current === null) start.current = t;
-    const p = Math.min(1, (t - start.current) / (seconds * 1000));
-    setProgress(p);
-    if (p >= 1) {
-      start.current = null;
-      onDone();
-      return;
-    }
-    raf.current = requestAnimationFrame(tick);
-  };
-  const begin = () => {
-    cancelAnimationFrame(raf.current);
-    start.current = null;
-    raf.current = requestAnimationFrame(tick);
-  };
-  useEffect(() => () => cancelAnimationFrame(raf.current), []);
-
-  const C = 2 * Math.PI * 46;
-  return (
-    <span className="hold">
-      <button
-        type="button"
-        className="btn navy"
-        onPointerDown={(e) => { e.preventDefault(); begin(); }}
-        onPointerUp={stop}
-        onPointerLeave={stop}
-        onPointerCancel={stop}
-        onKeyDown={(e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); begin(); } }}
-        onKeyUp={(e) => { if (e.key === ' ' || e.key === 'Enter') stop(); }}
-        onContextMenu={(e) => e.preventDefault()}
-        aria-describedby="hold-help"
-      >
-        {children}
-      </button>
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <rect x="4" y="4" width="92" height="92" rx="20" fill="none" stroke="var(--yellow)" strokeWidth="5"
-          pathLength={C} strokeDasharray={C} strokeDashoffset={C * (1 - progress)} />
-      </svg>
-      <span id="hold-help" className="sr-only">Press and hold for {seconds} seconds.</span>
-    </span>
-  );
-}
-
 /** Animated number count-up; jumps straight to the end under reduced motion. */
 export function CountUp({ to, ms = 1000 }: { to: number; ms?: number }) {
   const { reducedMotion } = useLumen();
