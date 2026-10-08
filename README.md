@@ -16,6 +16,7 @@ Lumo, a little crayon firefly, cheers you on, helps when you're stuck, and never
   <img alt="Unit tests" src="https://img.shields.io/badge/unit%20tests-207%20passing-2e8b57" />
   <img alt="Browser journeys" src="https://img.shields.io/badge/browser%20journeys-24%20passing-2e8b57" />
   <img alt="Deployed on Render" src="https://img.shields.io/badge/deployed%20on-Render-46e3b7?logo=render&logoColor=white" />
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-f2a65a" /></a>
 </p>
 <p>
   <img alt="React 19" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white" />
@@ -332,6 +333,12 @@ npm run icons        # illustrations for word help and badges
 - **The voice pack** is only partly built. With a Fish Audio or Google key, `npm run voices` fills in the rest.
 - **The free server sleeps** after 15 minutes without visitors. A paid plan or another host avoids the wake-up wait.
 - Lumen is a learning tool, not a medical one. It never diagnoses, treats, or claims to fix dyslexia.
+
+## 📄 License
+
+[MIT](LICENSE) © 2026 Anas Arfeen. You're free to use, change and share Lumen; please keep the copyright notice.
+
+Bundled third-party assets keep their own licences: Fluent Emoji illustrations (MIT, see [`public/pictures/NOTICE.md`](public/pictures/NOTICE.md)) and the fonts (SIL Open Font License).
 
 ## 🙏 Credits
 

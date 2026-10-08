@@ -3,6 +3,8 @@
   "private": true,
   "version": "1.0.0",
   "description": "Lumen: an adaptive literacy game for dyslexic learners, guided by Lumo the firefly.",
+  "license": "MIT",
+  "author": "Anas Arfeen",
   "type": "module",
   "engines": {
     "node": ">=22.13"
