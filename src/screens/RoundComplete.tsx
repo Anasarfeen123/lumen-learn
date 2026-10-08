@@ -87,10 +87,10 @@ export function RoundComplete({ summary }: { summary: RoundSummary }) {
           </div>
 
           <div className="actions">
-            <button type="button" className="btn go" onClick={() => go({ name: 'game', game: summary.recommended })} autoFocus>
+            <button type="button" className="btn go" onClick={() => go({ name: 'game', mode: summary.recommended })} autoFocus>
               {nextLabel} <Arrow size={26} />
             </button>
-            <button type="button" className="btn" onClick={() => go({ name: 'game', game: summary.game })}>Play again</button>
+            <button type="button" className="btn" onClick={() => go({ name: 'game', mode: summary.mode })}>Play again</button>
             <button type="button" className="btn" onClick={() => go({ name: 'hub' })}>Map</button>
           </div>
         </div>

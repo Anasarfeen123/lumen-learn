@@ -57,3 +57,19 @@ export function Moon({ style }: { style?: CSSProperties }) {
     </svg>
   );
 }
+
+/** A crayon signpost: "Small steps / Big progress". */
+export function Signpost({ style }: { style?: CSSProperties }) {
+  return (
+    <svg {...base} className="doodle signpost" viewBox="0 0 180 230" width="170" style={style}>
+      <g filter="url(#wobble)">
+        <rect x="80" y="40" width="14" height="185" rx="3" fill="#c9a26b" stroke="#2b2c5e" strokeWidth="2.5" />
+        <path d="M14 34 L150 22 L172 52 L150 80 L18 88 Z" fill="#ffd98a" stroke="#2b2c5e" strokeWidth="2.5" strokeLinejoin="round" />
+        <path d="M8 112 L144 104 L166 134 L144 164 L12 168 Z" fill="#ffd98a" stroke="#2b2c5e" strokeWidth="2.5" strokeLinejoin="round" />
+      </g>
+      <text x="86" y="62" textAnchor="middle" fontFamily="Gaegu, cursive" fontWeight="700" fontSize="26" fill="#2b2c5e" transform="rotate(-4 86 62)">Small steps</text>
+      <text x="84" y="143" textAnchor="middle" fontFamily="Gaegu, cursive" fontWeight="700" fontSize="26" fill="#2b2c5e" transform="rotate(-3 84 143)">Big progress</text>
+      <path d="M40 222 q8-16 14 0 q8-18 14 0 q8-14 12 0" fill="none" stroke="#7fc796" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}

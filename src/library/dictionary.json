@@ -1,0 +1,2034 @@
+{
+ "version": 1,
+ "note": "Drafted by AI from each word's sentence in the story bank; review before treating as approved.",
+ "entries": {
+  "pip": {
+   "meaning": "a name, a small dog in the story",
+   "example": "Pip barks at the park",
+   "emoji": "\ud83d\udc36",
+   "source": "ai"
+  },
+  "is": {
+   "meaning": "shows that something exists or equals",
+   "example": "She is happy",
+   "emoji": "",
+   "source": "ai"
+  },
+  "a": {
+   "meaning": "one, used before a noun",
+   "example": "I have a book",
+   "emoji": "",
+   "source": "ai"
+  },
+  "pup": {
+   "meaning": "young dog, a small dog",
+   "example": "The pup chews a toy",
+   "emoji": "\ud83d\udc15",
+   "source": "ai"
+  },
+  "has": {
+   "meaning": "owns or possesses something",
+   "example": "He has a kite",
+   "emoji": "",
+   "source": "ai"
+  },
+  "red": {
+   "meaning": "color like a ripe apple",
+   "example": "She wore a red hat",
+   "emoji": "\ud83d\udd34",
+   "source": "ai"
+  },
+  "ball": {
+   "meaning": "round object for play",
+   "example": "Kids throw the ball",
+   "emoji": "\u26bd",
+   "source": "ai"
+  },
+  "likes": {
+   "meaning": "enjoys doing something",
+   "example": "She likes drawing",
+   "emoji": "",
+   "source": "ai"
+  },
+  "to": {
+   "meaning": "shows purpose or direction",
+   "example": "Go to school",
+   "emoji": "",
+   "source": "ai"
+  },
+  "run": {
+   "meaning": "move fast using legs",
+   "example": "Dogs run in fields",
+   "emoji": "\ud83c\udfc3",
+   "source": "ai"
+  },
+  "and": {
+   "meaning": "connects words together",
+   "example": "Milk and cookies",
+   "emoji": "",
+   "source": "ai"
+  },
+  "jump": {
+   "meaning": "push off ground and rise",
+   "example": "Frogs jump high",
+   "emoji": "\ud83e\udd3e",
+   "source": "ai"
+  },
+  "with": {
+   "meaning": "together alongside something",
+   "example": "She sings with friends",
+   "emoji": "",
+   "source": "ai"
+  },
+  "the": {
+   "meaning": "points to one thing we both know about",
+   "example": "The sun is bright.",
+   "emoji": "",
+   "source": "reviewed"
+  },
+  "rolls": {
+   "meaning": "moves by turning over",
+   "example": "The dice rolls",
+   "emoji": "\ud83c\udfb2",
+   "source": "ai"
+  },
+  "it": {
+   "meaning": "the thing being talked about",
+   "example": "It moves quickly.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "past": {
+   "meaning": "going beyond something",
+   "example": "She walked past the store.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "cat": {
+   "meaning": "a name for a small furry animal",
+   "example": "The cat chased a mouse.",
+   "emoji": "\ud83d\udc31",
+   "source": "ai"
+  },
+  "bed": {
+   "meaning": "a place to sleep",
+   "example": "She made her bed tidy.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "sniffs": {
+   "meaning": "takes a short smell",
+   "example": "The dog sniffs the air.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "where": {
+   "meaning": "asks about location",
+   "example": "Where is my book?",
+   "emoji": "",
+   "source": "ai"
+  },
+  "looks": {
+   "meaning": "directs eyes toward something",
+   "example": "He looks at the sky.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "in": {
+   "meaning": "inside of something",
+   "example": "The toy is in the box.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "box": {
+   "meaning": "a container with sides",
+   "example": "She opened the box gently.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "no": {
+   "meaning": "says something is not true",
+   "example": "No, that's not right.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "bag": {
+   "meaning": "a soft container for holding things",
+   "example": "He put the apple in the bag.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "sun": {
+   "meaning": "the star that shines in the sky",
+   "example": "The sun rises early.",
+   "emoji": "\u2600\ufe0f",
+   "source": "ai"
+  },
+  "hot": {
+   "meaning": "having high temperature",
+   "example": "The soup is hot now.",
+   "emoji": "\ud83d\udd25",
+   "source": "ai"
+  },
+  "naps": {
+   "meaning": "takes a short sleep",
+   "example": "She naps after lunch.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "shade": {
+   "meaning": "a cool area away from sunlight",
+   "example": "They sat in the shade.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "was": {
+   "meaning": "tells about something in the past",
+   "example": "The cat was asleep.",
+   "emoji": "",
+   "source": "reviewed"
+  },
+  "by": {
+   "meaning": "next to or close to",
+   "example": "She sat by the fire.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "tree": {
+   "meaning": "a tall plant with leaves",
+   "example": "Birds sang in the tree.",
+   "emoji": "\ud83c\udf33",
+   "source": "ai"
+  },
+  "glad": {
+   "meaning": "feeling happy and pleased",
+   "example": "He felt glad after the game.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "good": {
+   "meaning": "nice or well done",
+   "example": "Good job on the drawing!",
+   "emoji": "",
+   "source": "ai"
+  },
+  "sam": {
+   "meaning": "a name, the child in the story",
+   "example": "Sam found a stone.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "dad": {
+   "meaning": "a name, the child's father",
+   "example": "Dad cooked dinner.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "go": {
+   "meaning": "move from one place to another",
+   "example": "We go to school daily.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "dock": {
+   "meaning": "a place where boats tie up",
+   "example": "The boat waited at the dock.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "wind": {
+   "meaning": "air moving fast outdoors",
+   "example": "The wind blew the kite.",
+   "emoji": "\ud83c\udf2c\ufe0f",
+   "source": "ai"
+  },
+  "cold": {
+   "meaning": "feeling low temperature",
+   "example": "The water felt cold.",
+   "emoji": "\ud83e\udd76",
+   "source": "ai"
+  },
+  "hat": {
+   "meaning": "a covering for the head",
+   "example": "She wore a blue hat.",
+   "emoji": "\ud83d\udc52",
+   "source": "ai"
+  },
+  "coat": {
+   "meaning": "a warm outer garment",
+   "example": "He put on his coat.",
+   "emoji": "\ud83e\udde5",
+   "source": "ai"
+  },
+  "big": {
+   "meaning": "large in size",
+   "example": "They saw a big mountain.",
+   "emoji": "\ud83c\udfd4\ufe0f",
+   "source": "ai"
+  },
+  "ship": {
+   "meaning": "large boat that travels on water",
+   "example": "The ship sailed far.",
+   "emoji": "\ud83d\udea2",
+   "source": "ai"
+  },
+  "on": {
+   "meaning": "indicating where something rests",
+   "example": "The book sits on the table.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "sea": {
+   "meaning": "large body of salty water",
+   "example": "We walked by the sea.",
+   "emoji": "\ud83c\udf0a",
+   "source": "ai"
+  },
+  "long": {
+   "meaning": "having great length",
+   "example": "She has a long scarf.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "deck": {
+   "meaning": "flat floor on a ship",
+   "example": "Kids played on the deck.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "fish": {
+   "meaning": "a swimming animal with fins",
+   "example": "A fish swam near the shore.",
+   "emoji": "\ud83d\udc1f",
+   "source": "ai"
+  },
+  "jumps": {
+   "meaning": "moves quickly upward",
+   "example": "The cat jumps onto the couch.",
+   "emoji": "\ud83e\udd3e",
+   "source": "ai"
+  },
+  "up": {
+   "meaning": "toward a higher place",
+   "example": "He lifted the box up.",
+   "emoji": "\u2b06\ufe0f",
+   "source": "ai"
+  },
+  "splash": {
+   "meaning": "sound of water hitting surface",
+   "example": "Splash! The stone fell.",
+   "emoji": "\ud83d\udca6",
+   "source": "ai"
+  },
+  "comes": {
+   "meaning": "arrives or moves toward",
+   "example": "The train comes soon.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "man": {
+   "meaning": "a name for an adult male",
+   "example": "The man smiled.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "ties": {
+   "meaning": "connects with a rope or knot",
+   "example": "She ties her shoes.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "rope": {
+   "meaning": "strong cord used to pull",
+   "example": "He pulled the rope tight.",
+   "emoji": "\ud83e\udea2",
+   "source": "ai"
+  },
+  "lifts": {
+   "meaning": "raises something higher",
+   "example": "She lifts the bag up.",
+   "emoji": "\ud83c\udfcb\ufe0f",
+   "source": "ai"
+  },
+  "see": {
+   "meaning": "to look at something",
+   "example": "Can you see the stars?",
+   "emoji": "\ud83d\udc40",
+   "source": "ai"
+  },
+  "when": {
+   "meaning": "at the time that",
+   "example": "When it rains, we stay inside.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "i": {
+   "meaning": "the speaker talking about themselves",
+   "example": "I like ice cream",
+   "emoji": "",
+   "source": "ai"
+  },
+  "am": {
+   "meaning": "present form of the verb to be",
+   "example": "I am happy",
+   "emoji": "",
+   "source": "ai"
+  },
+  "will": {
+   "meaning": "shows something happening in the future",
+   "example": "She will run tomorrow",
+   "emoji": "",
+   "source": "ai"
+  },
+  "sail": {
+   "meaning": "move a boat using wind or power",
+   "example": "We sail on the lake",
+   "emoji": "\u26f5",
+   "source": "ai"
+  },
+  "said": {
+   "meaning": "spoke these words",
+   "example": "He said hello",
+   "emoji": "",
+   "source": "ai"
+  },
+  "smiles": {
+   "meaning": "shows happiness with a face",
+   "example": "She smiles at friends",
+   "emoji": "\ud83d\ude0a",
+   "source": "ai"
+  },
+  "then": {
+   "meaning": "next in time or order",
+   "example": "Then we ate dinner",
+   "emoji": "",
+   "source": "ai"
+  },
+  "wave": {
+   "meaning": "move hand back and forth",
+   "example": "She wave goodbye",
+   "emoji": "\ud83d\udc4b",
+   "source": "ai"
+  },
+  "from": {
+   "meaning": "starting point of something",
+   "example": "He came from school",
+   "emoji": "",
+   "source": "ai"
+  },
+  "day": {
+   "meaning": "time when the sun is up",
+   "example": "It is a bright day",
+   "emoji": "\u2600\ufe0f",
+   "source": "ai"
+  },
+  "pond": {
+   "meaning": "small body of still water",
+   "example": "Fish live in pond",
+   "emoji": "\ud83c\udfde\ufe0f",
+   "source": "ai"
+  },
+  "frog": {
+   "meaning": "a name, a green amphibian",
+   "example": "Frog jumps high",
+   "emoji": "\ud83d\udc38",
+   "source": "ai"
+  },
+  "sat": {
+   "meaning": "rested on a surface",
+   "example": "She sat on chair",
+   "emoji": "",
+   "source": "ai"
+  },
+  "stone": {
+   "meaning": "hard piece of rock",
+   "example": "A stone fell",
+   "emoji": "\ud83e\udea8",
+   "source": "ai"
+  },
+  "need": {
+   "meaning": "require something",
+   "example": "I need help",
+   "emoji": "",
+   "source": "ai"
+  },
+  "rain": {
+   "meaning": "water falling from clouds",
+   "example": "Rain fell on the garden",
+   "emoji": "\ud83c\udf27",
+   "source": "ai"
+  },
+  "my": {
+   "meaning": "shows something belongs to the speaker",
+   "example": "My book is new",
+   "emoji": "",
+   "source": "ai"
+  },
+  "low": {
+   "meaning": "not high; near the ground",
+   "example": "The fence is low",
+   "emoji": "",
+   "source": "ai"
+  },
+  "duck": {
+   "meaning": "a name; a bird that swims",
+   "example": "Duck paddled in the pond",
+   "emoji": "\ud83e\udd86",
+   "source": "ai"
+  },
+  "swam": {
+   "meaning": "moved through water using limbs",
+   "example": "Fish swam quickly",
+   "emoji": "\ud83c\udfca",
+   "source": "ai"
+  },
+  "sky": {
+   "meaning": "the space above Earth",
+   "example": "Stars twinkled in the sky",
+   "emoji": "\u2601",
+   "source": "ai"
+  },
+  "blue": {
+   "meaning": "color like clear water",
+   "example": "She wore a blue dress",
+   "emoji": "\ud83d\udd35",
+   "source": "ai"
+  },
+  "today": {
+   "meaning": "the current day",
+   "example": "We play today",
+   "emoji": "",
+   "source": "ai"
+  },
+  "sighed": {
+   "meaning": "breathed out a long breath",
+   "example": "She sighed with relief",
+   "emoji": "\ud83d\ude2e\u200d\ud83d\udca8",
+   "source": "ai"
+  },
+  "very": {
+   "meaning": "used to make something stronger",
+   "example": "He is very kind",
+   "emoji": "",
+   "source": "ai"
+  },
+  "still": {
+   "meaning": "not moving; quiet",
+   "example": "The lake was still",
+   "emoji": "\ud83e\uddd8",
+   "source": "ai"
+  },
+  "blew": {
+   "meaning": "air moved outward forcefully",
+   "example": "The wind blew hard",
+   "emoji": "\ud83d\udca8",
+   "source": "ai"
+  },
+  "grey": {
+   "meaning": "color between black and white",
+   "example": "Grey stones line the path",
+   "emoji": "\u26aa",
+   "source": "ai"
+  },
+  "clouds": {
+   "meaning": "white or grey masses in the sky",
+   "example": "Clouds drifted slowly",
+   "emoji": "\u2601",
+   "source": "ai"
+  },
+  "rolled": {
+   "meaning": "moved by turning over repeatedly",
+   "example": "The ball rolled down",
+   "emoji": "\u26bd",
+   "source": "ai"
+  },
+  "drip": {
+   "meaning": "small steady flow of liquid",
+   "example": "The faucet made a soft drip.",
+   "emoji": "\ud83d\udca7",
+   "source": "ai"
+  },
+  "drop": {
+   "meaning": "single small piece of liquid falling",
+   "example": "A raindrop fell on the leaf.",
+   "emoji": "\ud83d\udca6",
+   "source": "ai"
+  },
+  "began": {
+   "meaning": "started to happen",
+   "example": "The game began at noon.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "fall": {
+   "meaning": "move downwards due to gravity",
+   "example": "Leaves fall in autumn.",
+   "emoji": "\ud83c\udf42",
+   "source": "ai"
+  },
+  "grew": {
+   "meaning": "became larger or more numerous",
+   "example": "The garden grew quickly.",
+   "emoji": "\ud83c\udf31",
+   "source": "ai"
+  },
+  "hopped": {
+   "meaning": "jumped lightly using both feet",
+   "example": "The bunny hopped across the yard.",
+   "emoji": "\ud83d\udc07",
+   "source": "ai"
+  },
+  "sang": {
+   "meaning": "produced musical sounds with voice",
+   "example": "She sang a happy tune.",
+   "emoji": "\ud83c\udfa4",
+   "source": "ai"
+  },
+  "thank": {
+   "meaning": "show gratitude",
+   "example": "Thank your friend for help.",
+   "emoji": "\ud83d\ude4f",
+   "source": "ai"
+  },
+  "you": {
+   "meaning": "the person being spoken to",
+   "example": "You are doing great!",
+   "emoji": "",
+   "source": "ai"
+  },
+  "splashed": {
+   "meaning": "caused water to scatter loudly",
+   "example": "He splashed in the pool.",
+   "emoji": "\ud83d\udca6",
+   "source": "ai"
+  },
+  "too": {
+   "meaning": "also; in addition",
+   "example": "I want ice cream too.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "mia": {
+   "meaning": "a name; a girl in the story",
+   "example": "Mia likes to read books.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "could": {
+   "meaning": "was able to",
+   "example": "She could finish the puzzle.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "not": {
+   "meaning": "used to make a negative statement",
+   "example": "He is not ready yet.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "sleep": {
+   "meaning": "rest with eyes closed",
+   "example": "Cats love to sleep.",
+   "emoji": "\ud83d\ude34",
+   "source": "ai"
+  },
+  "she": {
+   "meaning": "a girl or woman being talked about",
+   "example": "She sang a song.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "looked": {
+   "meaning": "used her eyes to see something",
+   "example": "He looked at the picture.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "out": {
+   "meaning": "away from inside, to the outside",
+   "example": "She stepped out quickly.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "at": {
+   "meaning": "showing direction toward something",
+   "example": "He pointed at the cat.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "bright": {
+   "meaning": "full of strong light",
+   "example": "The sun is bright today.",
+   "emoji": "\u2600",
+   "source": "ai"
+  },
+  "moon": {
+   "meaning": "the round night light in the sky",
+   "example": "The moon shines at night.",
+   "emoji": "\ud83c\udf19",
+   "source": "ai"
+  },
+  "little": {
+   "meaning": "small in size or amount",
+   "example": "A little bird sang.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "boat": {
+   "meaning": "a small vehicle that moves on water",
+   "example": "The boat crossed the lake.",
+   "emoji": "\u26f5",
+   "source": "ai"
+  },
+  "floated": {
+   "meaning": "moved gently on the water's surface",
+   "example": "The leaf floated downstream.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "her": {
+   "meaning": "belonging to a girl or woman",
+   "example": "I gave her a gift.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "window": {
+   "meaning": "glass opening to see outside",
+   "example": "The rain hit the window.",
+   "emoji": "\ud83e\ude9f",
+   "source": "ai"
+  },
+  "climbed": {
+   "meaning": "went up using hands or feet",
+   "example": "She climbed the hill.",
+   "emoji": "\ud83e\uddd7",
+   "source": "ai"
+  },
+  "sailed": {
+   "meaning": "moved across water using wind",
+   "example": "The ship sailed away.",
+   "emoji": "\u26f4",
+   "source": "ai"
+  },
+  "trees": {
+   "meaning": "tall plants with trunks and leaves",
+   "example": "Birds live in trees.",
+   "emoji": "\ud83c\udf33",
+   "source": "ai"
+  },
+  "stars": {
+   "meaning": "bright points in the night sky",
+   "example": "Stars twinkled above us.",
+   "emoji": "\u2b50",
+   "source": "ai"
+  },
+  "were": {
+   "meaning": "tells about more than one thing in the past",
+   "example": "We were happy.",
+   "emoji": "",
+   "source": "reviewed"
+  },
+  "like": {
+   "meaning": "similar to; showing comparison",
+   "example": "She sings like a bird.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "tiny": {
+   "meaning": "very small in size",
+   "example": "A tiny mouse scurried away.",
+   "emoji": "\ud83d\udc2d",
+   "source": "ai"
+  },
+  "lamps": {
+   "meaning": "devices that give light",
+   "example": "Night lamps glow softly.",
+   "emoji": "\ud83d\udca1",
+   "source": "ai"
+  },
+  "quiet": {
+   "meaning": "soft, not noisy",
+   "example": "The library is quiet.",
+   "emoji": "\ud83e\udd2b",
+   "source": "ai"
+  },
+  "soft": {
+   "meaning": "gentle to touch or feel",
+   "example": "The pillow feels soft.",
+   "emoji": "\ud83d\udecf\ufe0f",
+   "source": "ai"
+  },
+  "jumped": {
+   "meaning": "pushed off ground and rose quickly",
+   "example": "The frog jumped into water.",
+   "emoji": "\ud83d\udc38",
+   "source": "ai"
+  },
+  "high": {
+   "meaning": "far up from the ground",
+   "example": "The kite flew high.",
+   "emoji": "\ud83e\ude81",
+   "source": "ai"
+  },
+  "found": {
+   "meaning": "discovered something you were looking for",
+   "example": "He found a lost key.",
+   "emoji": "\ud83d\udd11",
+   "source": "ai"
+  },
+  "shiny": {
+   "meaning": "bright and reflecting light",
+   "example": "The coin looks shiny.",
+   "emoji": "\ud83e\ude99",
+   "source": "ai"
+  },
+  "put": {
+   "meaning": "place something somewhere",
+   "example": "She put the book down.",
+   "emoji": "\ud83d\udcda",
+   "source": "ai"
+  },
+  "took": {
+   "meaning": "carried or moved something away",
+   "example": "He took the bag.",
+   "emoji": "\ud83d\udc5c",
+   "source": "ai"
+  },
+  "home": {
+   "meaning": "place where you live",
+   "example": "We returned home.",
+   "emoji": "\ud83c\udfe0",
+   "source": "ai"
+  },
+  "woke": {
+   "meaning": "became awake after sleeping",
+   "example": "She woke early today.",
+   "emoji": "\u23f0",
+   "source": "ai"
+  },
+  "dream": {
+   "meaning": "thoughts while sleeping or wish",
+   "example": "He had a strange dream.",
+   "emoji": "\ud83d\udcad",
+   "source": "ai"
+  },
+  "rabbit": {
+   "meaning": "a name for a fluffy animal in the story",
+   "example": "The rabbit hopped across the field.",
+   "emoji": "\ud83d\udc07",
+   "source": "ai"
+  },
+  "wanted": {
+   "meaning": "felt a need for something",
+   "example": "She wanted ice cream after dinner.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "garden": {
+   "meaning": "a place where plants grow",
+   "example": "They planted flowers in the garden.",
+   "emoji": "\ud83c\udf31",
+   "source": "ai"
+  },
+  "dug": {
+   "meaning": "broke ground with a tool",
+   "example": "He dug a hole for the plant.",
+   "emoji": "\u26cf",
+   "source": "ai"
+  },
+  "soil": {
+   "meaning": "earth where plants take roots",
+   "example": "The soil felt soft and dark.",
+   "emoji": "\ud83c\udf0d",
+   "source": "ai"
+  },
+  "planted": {
+   "meaning": "put seeds or plants into the ground",
+   "example": "She planted a tree near the house.",
+   "emoji": "\ud83c\udf33",
+   "source": "ai"
+  },
+  "seeds": {
+   "meaning": "tiny beginnings of plants",
+   "example": "Birds ate the scattered seeds.",
+   "emoji": "\ud83c\udf30",
+   "source": "ai"
+  },
+  "tidy": {
+   "meaning": "neat and orderly",
+   "example": "His room stayed tidy after cleaning.",
+   "emoji": "\ud83e\uddf9",
+   "source": "ai"
+  },
+  "rows": {
+   "meaning": "straight lines of things placed together",
+   "example": "The chairs were set in rows.",
+   "emoji": "\ud83d\udccf",
+   "source": "ai"
+  },
+  "grow": {
+   "meaning": "to become bigger or develop",
+   "example": "Plants grow when they get water.",
+   "emoji": "\ud83c\udf3f",
+   "source": "ai"
+  },
+  "every": {
+   "meaning": "each one without missing any",
+   "example": "Every child received a gift.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "morning": {
+   "meaning": "the time after night, before noon",
+   "example": "We ate breakfast in the morning.",
+   "emoji": "\u2600",
+   "source": "ai"
+  },
+  "watered": {
+   "meaning": "gave water to plants",
+   "example": "He watered the cactus daily.",
+   "emoji": "\ud83d\udca7",
+   "source": "ai"
+  },
+  "but": {
+   "meaning": "introduces a contrast or opposite idea",
+   "example": "She was tired, but happy.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "nothing": {
+   "meaning": "no thing; not anything",
+   "example": "There was nothing left to eat.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "happened": {
+   "meaning": "something occurred or took place",
+   "example": "The rain happened quickly.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "felt": {
+   "meaning": "experienced a feeling inside",
+   "example": "He felt cold in the night.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "sad": {
+   "meaning": "feeling unhappy or sorrowful",
+   "example": "She felt sad after the game.",
+   "emoji": "\ud83d\ude22",
+   "source": "ai"
+  },
+  "down": {
+   "meaning": "lower position or direction",
+   "example": "The ball rolled down the hill.",
+   "emoji": "\u2b07\ufe0f",
+   "source": "ai"
+  },
+  "log": {
+   "meaning": "a thick piece of tree trunk",
+   "example": "He threw the log into the river.",
+   "emoji": "\ud83e\udeb5",
+   "source": "ai"
+  },
+  "friend": {
+   "meaning": "a name for a companion",
+   "example": "My friend Sam visited today.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "mouse": {
+   "meaning": "a name for a small animal character",
+   "example": "Mouse smiled and waved.",
+   "emoji": "\ud83d\udc2d",
+   "source": "ai"
+  },
+  "came": {
+   "meaning": "arrived at a place",
+   "example": "She came early to class.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "take": {
+   "meaning": "to need or require",
+   "example": "It will take five minutes.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "time": {
+   "meaning": "a period when something occurs",
+   "example": "We have time after lunch.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "let": {
+   "meaning": "ask to allow or suggest doing something",
+   "example": "Let us go now.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "wait": {
+   "meaning": "stay in one place until something happens",
+   "example": "Please wait for the bus.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "together": {
+   "meaning": "in the same place or group",
+   "example": "They sang together loudly.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "they": {
+   "meaning": "refers to more than one person or thing",
+   "example": "They laughed at the joke.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "played": {
+   "meaning": "engaged in a game or activity",
+   "example": "Kids played in the park.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "talked": {
+   "meaning": "spoke to each other",
+   "example": "They talked while playing",
+   "emoji": "",
+   "source": "ai"
+  },
+  "watched": {
+   "meaning": "looked at something carefully",
+   "example": "They watched the clouds drift",
+   "emoji": "",
+   "source": "ai"
+  },
+  "one": {
+   "meaning": "the number 1",
+   "example": "One bird sang loudly",
+   "emoji": "",
+   "source": "ai"
+  },
+  "green": {
+   "meaning": "the colour of grass",
+   "example": "The leaf was bright green",
+   "emoji": "\ud83c\udf3f",
+   "source": "ai"
+  },
+  "shoots": {
+   "meaning": "new small plant stems",
+   "example": "The garden had fresh shoots",
+   "emoji": "",
+   "source": "ai"
+  },
+  "carrots": {
+   "meaning": "a name for orange vegetables",
+   "example": "She sliced carrots for soup",
+   "emoji": "\ud83e\udd55",
+   "source": "ai"
+  },
+  "flowers": {
+   "meaning": "a name for blooming plants",
+   "example": "The meadow filled with flowers",
+   "emoji": "\ud83c\udf38",
+   "source": "ai"
+  },
+  "shared": {
+   "meaning": "gave something to others",
+   "example": "She shared her snack",
+   "emoji": "",
+   "source": "ai"
+  },
+  "all": {
+   "meaning": "every one of them",
+   "example": "All kids joined the game",
+   "emoji": "",
+   "source": "ai"
+  },
+  "friends": {
+   "meaning": "people you like and trust",
+   "example": "She invited her friends",
+   "emoji": "\ud83d\udc6b",
+   "source": "ai"
+  },
+  "better": {
+   "meaning": "more good or improved",
+   "example": "It feels better now",
+   "emoji": "",
+   "source": "ai"
+  },
+  "hill": {
+   "meaning": "a small raised land area",
+   "example": "We climbed the hill",
+   "emoji": "\u26f0\ufe0f",
+   "source": "ai"
+  },
+  "lived": {
+   "meaning": "had a home there",
+   "example": "They lived near the river",
+   "emoji": "",
+   "source": "ai"
+  },
+  "dragon": {
+   "meaning": "a name for a mythical fire\u2011breathing creature",
+   "example": "The dragon guarded treasure",
+   "emoji": "\ud83d\udc09",
+   "source": "ai"
+  },
+  "called": {
+   "meaning": "named as",
+   "example": "He is called Sam",
+   "emoji": "",
+   "source": "ai"
+  },
+  "dot": {
+   "meaning": "a name, the dragon's name",
+   "example": "Dot breathed fire gently",
+   "emoji": "\ud83d\udc09",
+   "source": "ai"
+  },
+  "people": {
+   "meaning": "many humans",
+   "example": "People watched the sunrise",
+   "emoji": "",
+   "source": "ai"
+  },
+  "saw": {
+   "meaning": "noticed with eyes",
+   "example": "She saw a bright star",
+   "emoji": "",
+   "source": "ai"
+  },
+  "ran": {
+   "meaning": "moved quickly on foot",
+   "example": "He ran to the door",
+   "emoji": "",
+   "source": "ai"
+  },
+  "away": {
+   "meaning": "to a farther place",
+   "example": "The ball rolled away",
+   "emoji": "",
+   "source": "ai"
+  },
+  "only": {
+   "meaning": "just, no more than",
+   "example": "She ate only one cookie",
+   "emoji": "",
+   "source": "ai"
+  },
+  "want": {
+   "meaning": "desire to have",
+   "example": "I want a new book",
+   "emoji": "",
+   "source": "ai"
+  },
+  "tear": {
+   "meaning": "a drop of liquid from eyes",
+   "example": "A tear fell silently",
+   "emoji": "\ud83d\udca7",
+   "source": "ai"
+  },
+  "nose": {
+   "meaning": "the part of face for smelling",
+   "example": "He touched his nose",
+   "emoji": "\ud83d\udc43",
+   "source": "ai"
+  },
+  "girl": {
+   "meaning": "a young female child",
+   "example": "The girl sang loudly",
+   "emoji": "",
+   "source": "ai"
+  },
+  "ana": {
+   "meaning": "a name, a girl in the story",
+   "example": "Ana smiled brightly",
+   "emoji": "",
+   "source": "ai"
+  },
+  "heard": {
+   "meaning": "listened and understood sound",
+   "example": "She heard the music",
+   "emoji": "",
+   "source": "ai"
+  },
+  "walked": {
+   "meaning": "moved on foot slowly",
+   "example": "They walked through the park",
+   "emoji": "",
+   "source": "ai"
+  },
+  "are": {
+   "meaning": "asking if something exists",
+   "example": "Are you ready?",
+   "emoji": "",
+   "source": "ai"
+  },
+  "asked": {
+   "meaning": "said a question",
+   "example": "He asked for help",
+   "emoji": "",
+   "source": "ai"
+  },
+  "nodded": {
+   "meaning": "moved head up and down to show agreement",
+   "example": "She nodded and smiled.",
+   "emoji": "\ud83d\udc4d",
+   "source": "ai"
+  },
+  "wants": {
+   "meaning": "feels a desire for something",
+   "example": "He wants a new bike.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "play": {
+   "meaning": "take part in a fun activity",
+   "example": "Kids love to play outside.",
+   "emoji": "\u26bd",
+   "source": "ai"
+  },
+  "me": {
+   "meaning": "refers to the speaker",
+   "example": "Give me the book.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "can": {
+   "meaning": "asks if something is possible",
+   "example": "Can you help?",
+   "emoji": "\u2753",
+   "source": "ai"
+  },
+  "fly": {
+   "meaning": "move through the air using wings",
+   "example": "Birds fly high.",
+   "emoji": "\ud83e\udd85",
+   "source": "ai"
+  },
+  "gave": {
+   "meaning": "handed something to someone",
+   "example": "She gave a gift.",
+   "emoji": "\ud83c\udf81",
+   "source": "ai"
+  },
+  "ride": {
+   "meaning": "travel somewhere on a vehicle",
+   "example": "We ride the bus.",
+   "emoji": "\ud83d\ude8c",
+   "source": "ai"
+  },
+  "over": {
+   "meaning": "above and across",
+   "example": "Jump over the rope.",
+   "emoji": "\u26d3",
+   "source": "ai"
+  },
+  "town": {
+   "meaning": "a small city with houses",
+   "example": "They live in a town.",
+   "emoji": "\ud83c\udfd8",
+   "source": "ai"
+  },
+  "everyone": {
+   "meaning": "all the people together",
+   "example": "Everyone cheered loudly.",
+   "emoji": "\ud83d\ude4c",
+   "source": "ai"
+  },
+  "waved": {
+   "meaning": "moved hand back and forth to say hello",
+   "example": "He waved goodbye.",
+   "emoji": "\ud83d\udc4b",
+   "source": "ai"
+  },
+  "after": {
+   "meaning": "following something in time",
+   "example": "After lunch, we play.",
+   "emoji": "\u23f0",
+   "source": "ai"
+  },
+  "that": {
+   "meaning": "points to a thing just mentioned",
+   "example": "I like that song.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "had": {
+   "meaning": "possessed or experienced something",
+   "example": "She had a big smile.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "whole": {
+   "meaning": "complete; all of it",
+   "example": "She ate the whole cake.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "of": {
+   "meaning": "shows belonging or part of something",
+   "example": "A cup of tea.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "summer": {
+   "meaning": "the warm season between spring and autumn",
+   "example": "We swam during summer.",
+   "emoji": "\u2600",
+   "source": "ai"
+  },
+  "dry": {
+   "meaning": "without moisture; not wet",
+   "example": "The towel is dry now.",
+   "emoji": "\ud83e\uddfb",
+   "source": "ai"
+  },
+  "river": {
+   "meaning": "a large natural stream of water",
+   "example": "Fish live in the river.",
+   "emoji": "\ud83c\udf0a",
+   "source": "ai"
+  },
+  "near": {
+   "meaning": "close to; not far away",
+   "example": "The park is near our house.",
+   "emoji": "\ud83d\udccd",
+   "source": "ai"
+  },
+  "elephants": {
+   "meaning": "a name; large animals with trunks",
+   "example": "Elephants love water.",
+   "emoji": "\ud83d\udc18",
+   "source": "ai"
+  },
+  "became": {
+   "meaning": "changed into something else",
+   "example": "He became a teacher.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "thin": {
+   "meaning": "not thick; narrow",
+   "example": "She drew a thin line.",
+   "emoji": "\u270f",
+   "source": "ai"
+  },
+  "muddy": {
+   "meaning": "covered with wet earth",
+   "example": "The path got muddy.",
+   "emoji": "\ud83c\udf27",
+   "source": "ai"
+  },
+  "stream": {
+   "meaning": "a small flowing waterway",
+   "example": "Kids played by the stream.",
+   "emoji": "\ud83d\udca7",
+   "source": "ai"
+  },
+  "young": {
+   "meaning": "not old; early in life",
+   "example": "A young tree grew fast.",
+   "emoji": "\ud83c\udf31",
+   "source": "ai"
+  },
+  "thirsty": {
+   "meaning": "needing to drink water",
+   "example": "After running, I was thirsty.",
+   "emoji": "\ud83e\udd64",
+   "source": "ai"
+  },
+  "grandma": {
+   "meaning": "a name for a caring older woman in the story",
+   "example": "Grandma baked cookies for us.",
+   "emoji": "\ud83d\udc75",
+   "source": "ai"
+  },
+  "elephant": {
+   "meaning": "a large animal with a long nose",
+   "example": "The elephant splashed water.",
+   "emoji": "\ud83d\udc18",
+   "source": "ai"
+  },
+  "lifted": {
+   "meaning": "raised something up",
+   "example": "She lifted the box gently.",
+   "emoji": "\u2b06\ufe0f",
+   "source": "ai"
+  },
+  "trunk": {
+   "meaning": "the long nose of an elephant",
+   "example": "The trunk sprayed water.",
+   "emoji": "\ud83d\udc43",
+   "source": "ai"
+  },
+  "sniffed": {
+   "meaning": "took a quick smell",
+   "example": "He sniffed the flower.",
+   "emoji": "\ud83d\udc43",
+   "source": "ai"
+  },
+  "air": {
+   "meaning": "the invisible gas we breathe",
+   "example": "The air felt cool.",
+   "emoji": "\ud83c\udf2c\ufe0f",
+   "source": "ai"
+  },
+  "remember": {
+   "meaning": "keep something in mind",
+   "example": "I remember the song.",
+   "emoji": "\ud83e\udde0",
+   "source": "ai"
+  },
+  "lake": {
+   "meaning": "a big body of still water",
+   "example": "Swans swam on the lake.",
+   "emoji": "\ud83c\udfde\ufe0f",
+   "source": "ai"
+  },
+  "slowly": {
+   "meaning": "in a gentle, unhurried way",
+   "example": "She walked slowly home.",
+   "emoji": "\ud83d\udc22",
+   "source": "ai"
+  },
+  "beyond": {
+   "meaning": "further than, on the other side",
+   "example": "Beyond the hill, sunrise.",
+   "emoji": "\u27a1\ufe0f",
+   "source": "ai"
+  },
+  "tall": {
+   "meaning": "higher than most things",
+   "example": "The tall tree swayed.",
+   "emoji": "\ud83c\udf33",
+   "source": "ai"
+  },
+  "rocks": {
+   "meaning": "hard pieces of stone",
+   "example": "Rocks dotted the path.",
+   "emoji": "\ud83e\udea8",
+   "source": "ai"
+  },
+  "herd": {
+   "meaning": "a group of animals moving together",
+   "example": "The herd crossed the plain.",
+   "emoji": "\ud83d\udc04",
+   "source": "ai"
+  },
+  "for": {
+   "meaning": "used to show purpose or duration",
+   "example": "She waited for rain.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "passed": {
+   "meaning": "went past or moved through",
+   "example": "They passed the gate quickly.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "first": {
+   "meaning": "the earliest in order",
+   "example": "She was the first runner.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "rock": {
+   "meaning": "a hard piece of stone",
+   "example": "He threw a rock into the pond.",
+   "emoji": "\ud83e\udea8",
+   "source": "ai"
+  },
+  "second": {
+   "meaning": "the one after the first",
+   "example": "She finished second in the race.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "third": {
+   "meaning": "the one after the second",
+   "example": "He placed third on the podium.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "ones": {
+   "meaning": "the small children mentioned",
+   "example": "The ones laughed loudly.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "tired": {
+   "meaning": "feeling needing rest",
+   "example": "He felt tired after school.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "kept": {
+   "meaning": "continued to hold or do",
+   "example": "She kept the secret safe.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "them": {
+   "meaning": "refers to the little ones",
+   "example": "She gave them cookies.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "going": {
+   "meaning": "moving forward or continuing",
+   "example": "The train kept going fast.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "last": {
+   "meaning": "finally after waiting",
+   "example": "At last, the sun rose.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "beautiful": {
+   "meaning": "very pleasing to see",
+   "example": "The garden looked beautiful.",
+   "emoji": "\ud83c\udf38",
+   "source": "ai"
+  },
+  "full": {
+   "meaning": "completely filled",
+   "example": "The cup was full of juice.",
+   "emoji": "\u2615",
+   "source": "ai"
+  },
+  "cool": {
+   "meaning": "pleasantly cold or refreshing",
+   "example": "The breeze felt cool.",
+   "emoji": "\u2744\ufe0f",
+   "source": "ai"
+  },
+  "water": {
+   "meaning": "clear liquid we drink",
+   "example": "She drank cold water.",
+   "emoji": "\ud83d\udca7",
+   "source": "ai"
+  },
+  "sprayed": {
+   "meaning": "sent out water or liquid in many tiny drops",
+   "example": "He sprayed water on the garden",
+   "emoji": "\ud83d\udca6",
+   "source": "ai"
+  },
+  "how": {
+   "meaning": "asks about the way something happened",
+   "example": "How did you find it?",
+   "emoji": "",
+   "source": "ai"
+  },
+  "did": {
+   "meaning": "shows an action happened in the past",
+   "example": "She did her homework",
+   "emoji": "",
+   "source": "ai"
+  },
+  "smiled": {
+   "meaning": "showed happiness with a facial expression",
+   "example": "The child smiled brightly",
+   "emoji": "\ud83d\ude0a",
+   "source": "ai"
+  },
+  "some": {
+   "meaning": "a few, not all",
+   "example": "Some cookies are left",
+   "emoji": "",
+   "source": "ai"
+  },
+  "things": {
+   "meaning": "objects, ideas, or matters",
+   "example": "Things on the table moved",
+   "emoji": "",
+   "source": "ai"
+  },
+  "important": {
+   "meaning": "very needed or valuable",
+   "example": "Food is important daily",
+   "emoji": "",
+   "source": "ai"
+  },
+  "enough": {
+   "meaning": "sufficient; as much as needed",
+   "example": "He ate enough lunch",
+   "emoji": "",
+   "source": "ai"
+  },
+  "keep": {
+   "meaning": "hold onto or store",
+   "example": "Keep the book safe",
+   "emoji": "",
+   "source": "ai"
+  },
+  "kai": {
+   "meaning": "a name; a child in the story",
+   "example": "Kai found the map",
+   "emoji": "",
+   "source": "ai"
+  },
+  "lena": {
+   "meaning": "a name; a child in the story",
+   "example": "Lena read the map",
+   "emoji": "",
+   "source": "ai"
+  },
+  "an": {
+   "meaning": "used before a vowel sound to mean one",
+   "example": "She saw an owl",
+   "emoji": "",
+   "source": "ai"
+  },
+  "old": {
+   "meaning": "having lived many years",
+   "example": "The old tree fell",
+   "emoji": "",
+   "source": "ai"
+  },
+  "treasure": {
+   "meaning": "valuable items hidden or saved",
+   "example": "They found hidden treasure",
+   "emoji": "\ud83d\udcb0",
+   "source": "ai"
+  },
+  "map": {
+   "meaning": "a picture showing places",
+   "example": "The map showed the island",
+   "emoji": "\ud83d\uddfa\ufe0f",
+   "source": "ai"
+  },
+  "their": {
+   "meaning": "belonging to Kai and Lena",
+   "example": "They kept their books safe.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "grandfather": {
+   "meaning": "a name; their family elder",
+   "example": "Grandfather told a story.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "attic": {
+   "meaning": "top storage room in a house",
+   "example": "We found toys in the attic.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "corner": {
+   "meaning": "place where two walls meet",
+   "example": "The cat hid in the corner.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "drawing": {
+   "meaning": "picture made with lines",
+   "example": "She showed her drawing to friends.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "island": {
+   "meaning": "land surrounded by water",
+   "example": "We visited a tiny island.",
+   "emoji": "\ud83c\udfdd",
+   "source": "ai"
+  },
+  "volcano": {
+   "meaning": "mountain that can erupt lava",
+   "example": "The volcano erupted loudly.",
+   "emoji": "\ud83c\udf0b",
+   "source": "ai"
+  },
+  "real": {
+   "meaning": "actually exists, not imagined",
+   "example": "The treasure is real.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "borrowed": {
+   "meaning": "took something temporarily from someone",
+   "example": "He borrowed a pencil.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "small": {
+   "meaning": "not big; little",
+   "example": "She has a small dog.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "across": {
+   "meaning": "from one side to the other",
+   "example": "Birds flew across the sky.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "bay": {
+   "meaning": "a part of the sea, with land curving around it",
+   "example": "Boats rest in the calm bay.",
+   "emoji": "\ud83c\udf0a",
+   "source": "reviewed"
+  },
+  "as": {
+   "meaning": "while; at the same time that",
+   "example": "As it rained, we stayed inside.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "got": {
+   "meaning": "reached or arrived at",
+   "example": "She got home early.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "closer": {
+   "meaning": "nearer in distance",
+   "example": "The finish line is closer now.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "line": {
+   "meaning": "a thin mark or trail",
+   "example": "A line stretched across the sky.",
+   "emoji": "\u3030",
+   "source": "ai"
+  },
+  "smoke": {
+   "meaning": "visible clouds from fire",
+   "example": "Smoke drifted from the campfire.",
+   "emoji": "\ud83d\udca8",
+   "source": "ai"
+  },
+  "rising": {
+   "meaning": "going upward",
+   "example": "The balloon was rising fast.",
+   "emoji": "\u2b06",
+   "source": "ai"
+  },
+  "mountain": {
+   "meaning": "a very high hill",
+   "example": "We climbed the tall mountain.",
+   "emoji": "\u26f0",
+   "source": "ai"
+  },
+  "sleeping": {
+   "meaning": "not awake",
+   "example": "The cat is sleeping now.",
+   "emoji": "\ud83d\ude34",
+   "source": "ai"
+  },
+  "mostly": {
+   "meaning": "mainly, for the most part",
+   "example": "She liked fruits, mostly apples.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "led": {
+   "meaning": "showed the way",
+   "example": "The guide led us home.",
+   "emoji": "\ud83e\udded",
+   "source": "ai"
+  },
+  "through": {
+   "meaning": "from one side to the other",
+   "example": "We walked through the park.",
+   "emoji": "\ud83d\udeb6",
+   "source": "ai"
+  },
+  "jungle": {
+   "meaning": "dense, wild forest",
+   "example": "Monkeys live in the jungle.",
+   "emoji": "\ud83c\udf34",
+   "source": "ai"
+  },
+  "waterfall": {
+   "meaning": "water dropping from a height",
+   "example": "We heard a waterfall nearby.",
+   "emoji": "\ud83c\udf0a",
+   "source": "ai"
+  },
+  "cave": {
+   "meaning": "a natural underground room",
+   "example": "Bats lived inside the cave.",
+   "emoji": "\ud83d\udd73",
+   "source": "ai"
+  },
+  "covered": {
+   "meaning": "having something on top",
+   "example": "The floor was covered in snow.",
+   "emoji": "\ud83d\udecf",
+   "source": "ai"
+  },
+  "vines": {
+   "meaning": "long plants that climb",
+   "example": "Vines wrapped around the fence.",
+   "emoji": "\ud83c\udf3f",
+   "source": "ai"
+  },
+  "inside": {
+   "meaning": "within the interior",
+   "example": "Inside the box was a gift.",
+   "emoji": "\ud83d\udce6",
+   "source": "ai"
+  },
+  "dark": {
+   "meaning": "having little or no light",
+   "example": "The room was dark tonight.",
+   "emoji": "\ud83c\udf11",
+   "source": "ai"
+  },
+  "switched": {
+   "meaning": "turned on or off",
+   "example": "She switched the light off.",
+   "emoji": "\ud83d\udd00",
+   "source": "ai"
+  },
+  "torch": {
+   "meaning": "a handheld light source",
+   "example": "He carried a torch in the dark.",
+   "emoji": "\ud83d\udd26",
+   "source": "ai"
+  },
+  "something": {
+   "meaning": "an unknown thing",
+   "example": "Something fell from the sky.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "shining": {
+   "meaning": "giving out bright light",
+   "example": "The star was shining brightly.",
+   "emoji": "\u2728",
+   "source": "ai"
+  },
+  "wasn't": {
+   "meaning": "was not",
+   "example": "It wasn't raining today.",
+   "emoji": "",
+   "source": "reviewed"
+  },
+  "gold": {
+   "meaning": "shiny yellow metal",
+   "example": "She wore a gold ring.",
+   "emoji": "\ud83e\ude99",
+   "source": "ai"
+  },
+  "notebooks": {
+   "meaning": "books for writing or drawing",
+   "example": "He kept his notes in notebooks.",
+   "emoji": "\ud83d\udcd3",
+   "source": "ai"
+  },
+  "drawings": {
+   "meaning": "pictures made with lines",
+   "example": "Her drawings are very colorful.",
+   "emoji": "\ud83d\udd8d\ufe0f",
+   "source": "ai"
+  },
+  "birds": {
+   "meaning": "feathered animals that can fly",
+   "example": "Birds sang in the morning.",
+   "emoji": "\ud83d\udc26",
+   "source": "ai"
+  },
+  "plants": {
+   "meaning": "living things that grow in soil",
+   "example": "Plants need water and sunlight.",
+   "emoji": "\ud83c\udf31",
+   "source": "ai"
+  },
+  "shells": {
+   "meaning": "hard outer covering of sea creatures",
+   "example": "She collected shells on the beach.",
+   "emoji": "\ud83d\udc1a",
+   "source": "ai"
+  },
+  "this": {
+   "meaning": "the thing being talked about",
+   "example": "This is my favorite book.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "quietly": {
+   "meaning": "in a soft, low voice",
+   "example": "He whispered quietly to her.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "he": {
+   "meaning": "a male person",
+   "example": "He ran fast in the race.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "us": {
+   "meaning": "the speaker and others",
+   "example": "They invited us to play.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "be": {
+   "meaning": "to exist or act in a certain way",
+   "example": "We can be friends.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "explorers": {
+   "meaning": "people who travel to discover new places",
+   "example": "Explorers map unknown lands.",
+   "emoji": "\ud83e\udded",
+   "source": "ai"
+  },
+  "sir": {
+   "meaning": "a title for a knight",
+   "example": "Sir rides his horse.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "ned": {
+   "meaning": "a name; the brave knight in the story",
+   "example": "Ned found a hidden path.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "brave": {
+   "meaning": "showing courage despite fear",
+   "example": "She was brave during the storm.",
+   "emoji": "\ud83d\udcaa",
+   "source": "ai"
+  },
+  "knight": {
+   "meaning": "a soldier who serves a king, often on horseback",
+   "example": "The knight guarded the castle.",
+   "emoji": "\u2694\ufe0f",
+   "source": "ai"
+  },
+  "writing": {
+   "meaning": "the act of putting words on paper",
+   "example": "Writing helps share ideas.",
+   "emoji": "\u270d\ufe0f",
+   "source": "ai"
+  },
+  "letters": {
+   "meaning": "symbols that make up words",
+   "example": "Letters form sentences.",
+   "emoji": "\ud83d\udd24",
+   "source": "ai"
+  },
+  "words": {
+   "meaning": "groups of letters that convey meaning",
+   "example": "Words can inspire people.",
+   "emoji": "\ud83d\udde3\ufe0f",
+   "source": "ai"
+  },
+  "write": {
+   "meaning": "to form letters on a surface",
+   "example": "She will write a note.",
+   "emoji": "\ud83d\udd8a\ufe0f",
+   "source": "ai"
+  },
+  "seemed": {
+   "meaning": "appeared to be in a certain way",
+   "example": "He seemed tired.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "hide": {
+   "meaning": "to stay out of sight",
+   "example": "Bugs hide under leaves.",
+   "emoji": "\ud83e\udd97",
+   "source": "ai"
+  },
+  "him": {
+   "meaning": "refers to a male person previously mentioned",
+   "example": "Give him the book.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "wise": {
+   "meaning": "having good judgment and knowledge",
+   "example": "Wise advice helps everyone.",
+   "emoji": "\ud83e\udd89",
+   "source": "ai"
+  },
+  "owl": {
+   "meaning": "a bird that hunts at night",
+   "example": "The owl hooted softly.",
+   "emoji": "\ud83e\udd89",
+   "source": "ai"
+  },
+  "taught": {
+   "meaning": "showed how to do something",
+   "example": "She taught me to draw.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "trick": {
+   "meaning": "a clever small action",
+   "example": "He performed a magic trick.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "do": {
+   "meaning": "to perform an action",
+   "example": "We do our homework.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "say": {
+   "meaning": "to speak words out loud",
+   "example": "She will say hello.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "practised": {
+   "meaning": "repeated to become better",
+   "example": "He practised his piano daily.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "evening": {
+   "meaning": "the time after sunset",
+   "example": "We walked in the evening.",
+   "emoji": "",
+   "source": "ai"
+  },
+  "fire": {
+   "meaning": "a hot flame that gives light",
+   "example": "The fire warmed the room.",
+   "emoji": "\ud83d\udd25",
+   "source": "ai"
+  },
+  "nobody": {
+   "meaning": "no person at all",
+   "example": "Nobody answered the phone",
+   "emoji": "\ud83d\ude45",
+   "source": "ai"
+  },
+  "worried": {
+   "meaning": "feeling uneasy or concerned",
+   "example": "She felt worried about the storm",
+   "emoji": "\ud83d\ude1f",
+   "source": "ai"
+  },
+  "hard": {
+   "meaning": "takes a lot of effort to do",
+   "example": "Climbing the hill was hard work.",
+   "emoji": "",
+   "source": "reviewed"
+  },
+  "three": {
+   "meaning": "the number after two",
+   "example": "I have three red apples.",
+   "emoji": "3\ufe0f\u20e3",
+   "source": "reviewed"
+  }
+ }
+}

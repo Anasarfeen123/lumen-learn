@@ -26,12 +26,17 @@ import { loadEnv } from '../server/env.mjs';
 
 const run = promisify(execFile);
 loadEnv();
+const { GOOGLE_VOICES, googleConfigured, googleDefaultVoice, googleSynthesize } = await import('../server/google-tts.mjs');
+const { fishConfigured, fishDefaultVoice, fishSynthesize, fishVoices } = await import('../server/fish-tts.mjs');
 
 const ROOT = fileURLToPath(new URL('../public/voice/', import.meta.url));
 const MANIFEST = join(ROOT, 'manifest.json');
 const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '').split('=')).map(([k, v]) => [k, v ?? true]));
-const VOICES = ['hannah', 'autumn', 'diana', 'austin', 'daniel', 'troy'];
-const voice = args.voice || process.env.GROQ_TTS_VOICE || 'hannah';
+// Google Chirp 3 HD when configured (or --provider=google); otherwise Groq Orpheus.
+const provider = args.provider || (fishConfigured() ? 'fish' : googleConfigured() ? 'google' : 'groq');
+const VOICES = provider === 'fish' ? Object.keys(fishVoices()) : provider === 'google' ? Object.keys(GOOGLE_VOICES) : ['hannah', 'autumn', 'diana', 'austin', 'daniel', 'troy'];
+const voice = args.voice || (provider === 'fish' ? fishDefaultVoice() : provider === 'google' ? googleDefaultVoice() : process.env.GROQ_TTS_VOICE || 'hannah');
+const synthOne = provider === 'fish' ? fishSynthesize : googleSynthesize;
 const maxRequests = Number(args['max-requests'] ?? 75);
 const MODEL = process.env.GROQ_TTS_MODEL || 'canopylabs/orpheus-v1-english';
 const PREFIX = { lumo: '[friendly] ', word: '', slow: '[slowly] ' };
@@ -41,7 +46,15 @@ const WHISPER = 'whisper-large-v3-turbo';
 const SEP = ' ... ';
 
 if (!VOICES.includes(voice)) throw new Error(`Unknown voice "${voice}". Choose one of: ${VOICES.join(', ')}`);
-if (!process.env.GROQ_API_KEY && !args['dry-run']) {
+if (provider === 'fish' && !fishConfigured() && !args['dry-run']) {
+  console.error('Fish Audio isn\'t set up. Add FISH_API_KEY (and FISH_VOICE_ID) to .env.');
+  process.exit(1);
+}
+if (provider === 'google' && !googleConfigured() && !args['dry-run']) {
+  console.error('Google isn\'t set up. Add GOOGLE_TTS_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) to .env.');
+  process.exit(1);
+}
+if (provider === 'groq' && !process.env.GROQ_API_KEY && !args['dry-run']) {
   console.error('GROQ_API_KEY is missing. Add it to .env (see .env.example).');
   process.exit(1);
 }
@@ -244,10 +257,41 @@ if (args.verify) {
 }
 const todo = phrases.filter((p) => !done[p.key] || !existsSync(join(ROOT, done[p.key])));
 const plan = batches(todo);
-console.log(`Voice "${voice}": ${phrases.length} phrases, ${phrases.length - todo.length} already built, ${todo.length} to go in about ${plan.length} requests.`);
+console.log(`${provider === 'fish' ? 'Fish Audio' : provider === 'google' ? 'Google Chirp 3 HD' : 'Groq Orpheus'} voice "${voice}": ${phrases.length} phrases, ${phrases.length - todo.length} already built, ${todo.length} to go in about ${provider !== 'groq' ? todo.length : plan.length} requests.`);
 if (args['dry-run'] || !todo.length) process.exit(0);
 
 mkdirSync(join(ROOT, voice), { recursive: true });
+
+if (provider === 'google' || provider === 'fish') {
+  // One request per phrase: exact audio for every line, no splitting needed.
+  const save = () => writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 0)}\n`);
+  let built = 0;
+  const queue = todo.slice();
+  const worker = async () => {
+    while (queue.length) {
+      const p = queue.shift();
+      const file = fileFor(p.key);
+      for (let attempt = 0; attempt < 4; attempt++) {
+        try {
+          writeFileSync(join(ROOT, file), await synthOne(p.text, voice, p.style));
+          done[p.key] = file;
+          built++;
+          break;
+        } catch (e) {
+          if ((e.status === 429 || e.status === 503) && attempt < 3) { await new Promise((r) => setTimeout(r, 2000 * (attempt + 1))); continue; }
+          if (e.status === 402) { console.log(`  stopped: ${e.message}`); queue.length = 0; break; }
+          console.log(`  skipped "${p.text}": ${e.message}`);
+          break;
+        }
+      }
+      if (built % 25 === 0) { save(); console.log(`  ${built}/${todo.length}`); }
+    }
+  };
+  await Promise.all(provider === 'fish' ? [worker(), worker()] : [worker(), worker(), worker(), worker()]);
+  save();
+  console.log(`Done. ${Object.keys(done).length} phrases in public/voice/${voice}/ (${provider === 'fish' ? 'Fish Audio' : 'Google Chirp 3 HD'}).`);
+  process.exit(0);
+}
 const tmp = join(tmpdir(), `lumo-voice-${process.pid}`);
 mkdirSync(tmp, { recursive: true });
 const save = () => writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 0)}\n`);

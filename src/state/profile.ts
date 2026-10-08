@@ -1,5 +1,8 @@
 import { GAMES, type GameId, type Mastery, type Result, type Tag } from '../engine/types';
 import type { GlowColor, HatId, UnlockId } from '../engine/progression';
+import type { Mistakes } from '../engine/practice';
+import type { CourseId } from '../engine/courses';
+import { emptyLearning, type LearningState } from '../classroom/learning';
 
 export const STORAGE_KEY = 'lumen.profile.v1';
 export const HISTORY_LIMIT = 300;
@@ -43,7 +46,10 @@ export interface RoundLog {
   xp: number;
 }
 
-export type PathNode = { kind: 'round'; game: GameId; stars: number } | { kind: 'chest' };
+export type PathNode =
+  | { kind: 'round'; game: GameId; stars: number }
+  | { kind: 'review' | 'mixed' | 'milestone'; stars: number }
+  | { kind: 'chest' };
 
 export interface Profile {
   name: string;
@@ -62,10 +68,24 @@ export interface Profile {
   streak: { days: number; lastDay: string | null };
   stars: Record<GameId, number>;
   // Additions beyond the spec's example JSON, needed by the Hub path and grown-up view.
-  path: PathNode[];
+  /** Progress along each course's path. */
+  courses: Partial<Record<CourseId, PathNode[]>>;
+  activeCourse: CourseId;
   rounds: RoundLog[];
   weekSnapshot: { date: string; mastery: Mastery } | null;
   recommended: GameId;
+  /** Words that needed help, waiting to be practised again. */
+  mistakes: Mistakes;
+  /** Achievement ids already earned. */
+  badges: string[];
+  /** Total words answered right on the first try, ever. */
+  wordsLearned: number;
+  /** Words that left the mistakes bank after two clean answers. */
+  mistakesFixed: number;
+  /** Classroom activity records (separate from word-game mastery). */
+  learning: LearningState;
+  /** Playground scores: just for fun, never counted as learning. */
+  playground: Record<string, { plays: number; best: number | null; lastT: string }>;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -97,10 +117,17 @@ export function newProfile(now = new Date()): Profile {
     insights: [],
     streak: { days: 0, lastDay: null },
     stars: { detective: 0, sound: 0, builder: 0, speller: 0 },
-    path: [],
+    courses: { explorer: [] },
+    activeCourse: 'explorer',
     rounds: [],
     weekSnapshot: { date: now.toISOString(), mastery: {} },
     recommended: 'detective',
+    mistakes: {},
+    badges: [],
+    wordsLearned: 0,
+    mistakesFixed: 0,
+    learning: emptyLearning(),
+    playground: {},
   };
 }
 
@@ -117,7 +144,17 @@ export function migrate(data: unknown): Profile {
     stars: { ...base.stars, ...(d.stars ?? {}) },
     equipped: { ...base.equipped, ...(d.equipped ?? {}) },
     streak: { ...base.streak, ...(d.streak ?? {}) },
+    mistakes: { ...(d.mistakes ?? {}) },
+    courses: { explorer: [], ...(d.courses ?? {}) },
+    learning: { ...emptyLearning(), ...(d.learning ?? {}) },
+    playground: { ...(d.playground ?? {}) },
+    badges: [...(d.badges ?? [])],
   };
+  // Profiles from before courses existed: their path becomes Word Explorer's.
+  const legacy = (d as { path?: PathNode[] }).path;
+  if (legacy?.length && !d.courses) p.courses = { explorer: legacy };
+  delete (p as { path?: unknown }).path;
+  if (!['explorer', 'sounds', 'spelling', 'look'].includes(p.activeCourse)) p.activeCourse = 'explorer';
   // A profile saved before `onboarded` existed was onboarded if it has any progress.
   if (d.onboarded === undefined) p.onboarded = Boolean(d.name || d.xp);
   for (const g of GAMES) p.gameLevels[g] = Math.min(5, Math.max(1, Math.round(p.gameLevels[g]) || 1));
@@ -136,6 +173,15 @@ export interface Storage {
 }
 
 /** Every storage access is wrapped: a private window falls back to memory. */
+/** The active course's path. */
+export function activePath(p: Profile): PathNode[] {
+  return p.courses[p.activeCourse] ?? [];
+}
+
+export function withNode(p: Profile, node: PathNode): Profile {
+  return { ...p, courses: { ...p.courses, [p.activeCourse]: [...activePath(p), node] } };
+}
+
 export function createStorage(key = STORAGE_KEY): Storage {
   let available = true;
   try {

@@ -1,120 +1,110 @@
 # Lumen
 
-**Learn differently.** Lumen is a playful, adaptive literacy game for learners aged about 7 to 14 who find reading and spelling hard, including those with dyslexia. A small crayon firefly called **Lumo** guides short word games, notices what's getting easier, and adjusts what comes next.
+**Read, play, and learn at your own pace.** Lumen is a reading, learning and play app for children aged about 7 to 14, designed around dyslexic learners and enjoyable for everyone. Lumo, a little crayon firefly, guides every step.
 
-*Designed for dyslexic learners. Enjoyable for everyone.*
+![Classroom](docs/screenshots/classroom.png)
 
-![Lumo's path on the Hub](docs/screenshots/hub.png)
+> Lumen is practice. It is not a test, a diagnosis or a treatment, and never says otherwise.
 
-> Lumen is practice. It is not a test, a diagnosis, or a treatment, and it never says otherwise.
+## What's inside
 
-## What's in it
-
-- **Four games**, 5 items per round, select-then-Check, two tries per item:
-  - **Word Detective**: find the word that's spelled right.
-  - **Sound Match**: listen, then tap the word you hear.
-  - **Word Builder**: put the letters (or syllable chunks) in order, with partial credit.
-  - **Syllable Speller**: an Orton-Gillingham style activity. Lumo says the word beat by beat ("va… ca… tion") and the learner drags or taps letters from an alphabet into syllable boxes, under worked examples from the same word family (-tion, -ture, -ble, closed syllables). [Spec](docs/spec/10-syllable-speller.md).
-- **An adaptive engine** in plain, deterministic code. It tracks mastery per word feature (look-alike letters, vowel teams, long words…), picks each round's words, moves game levels up or down, and writes one "Lumo noticed…" insight per round.
-- **Progression that rewards effort**: XP, 1–3 stars (never 0), five glow stages, hats and glow colors in Lumo's closet, a gentle streak, glow chests on Lumo's path.
-- **A grown-up view** behind a press-and-hold gate: minutes and rounds this week, *Getting stronger*, *Still tricky*, a suggested game, and a short weekly summary.
-- **Accessibility built in**: every instruction is spoken, with a replay on every screen. There are no timers and no red. It has Lexend / OpenDyslexic / Atkinson fonts, three text sizes, four backgrounds including a dark "chalkboard night", reduced motion, full keyboard play, and screen-reader announcements.
-- **No sign-in.** Progress lives in the browser (`localStorage`, key `lumen.profile.v1`).
+| Section | What it does |
+|---|---|
+| **Hero page** | A short, skippable opening: Lumo flies in, its glow reveals the wordmark, and it settles on a stack of books. Returning learners get a quick hello and a "Continue learning" link. |
+| **Classroom** | The main learning place. Four courses (Word Explorer, Sound Lab, Spelling Studio, Look Closely), each a sequence of units with a winding lesson path: game rounds, mistake review, glow chest, mixed practice and a unit challenge. Plus an overview: continue, suggested next, today's goals, skills, Lumo's tip. |
+| **Classroom games** | Word Detective, Sound Match, Word Builder and Syllable Speller (Orton-Gillingham style), adaptive and untimed. Missed words come back at the end of a round (Duolingo-style) and in **Practice mistakes**. |
+| **Classroom activities** | Word twins (ship/shop), Letter teams, Riddles, Sentence order, Story questions, Write a sentence. Each **teaches first** with a worked example, then practises with hints, explanations, retry, previous/next and a completion screen. |
+| **Library** | Stories with covers, levels, search, filters, "Continue reading", bookmarks and saved position; and **My uploads**: paste text, `.txt`, PDF, or a photo (printed or handwritten), with a review screen before reading. |
+| **Reader** | Every word is one interactive unit (tap, click or keyboard). Word help shows the exact word, a short meaning *for this sentence*, an illustration where it helps, an example and a "say it" button. Read-aloud with pause/resume/stop and speed; word highlighting only when the voice reports real timings. Text size, spacing, width and paragraph focus. |
+| **Playground** | Memory match, Slide puzzle, Pattern train, Word & picture match. No timers. Scores are kept apart from learning progress. |
+| **Progress** | Lessons, stars, streak, skills, 12 badges and milestones. |
 
 | | |
 |---|---|
-| ![Welcome](docs/screenshots/welcome.png) | ![Syllable Speller](docs/screenshots/syllable-speller.png) |
-| ![Word Builder partial credit](docs/screenshots/builder-partial-credit.png) | ![Sound Match](docs/screenshots/sound-match.png) |
-| ![Round complete](docs/screenshots/round-complete.png) | ![Glow-up](docs/screenshots/glow-up.png) |
-| ![Grown-up view](docs/screenshots/grown-up.png) | ![Dark theme](docs/screenshots/hub-dark.png) |
+| ![Hero](docs/screenshots/hero.png) | ![Reader word help](docs/screenshots/reader-word-help.png) |
+| ![Library](docs/screenshots/library.png) | ![Playground](docs/screenshots/playground.png) |
+| ![Teach first](docs/screenshots/activity-teach.png) | ![Achievements](docs/screenshots/achievements.png) |
+
+Accessibility: no timers, no red, every instruction can be read aloud; Lexend / OpenDyslexic / Atkinson fonts; three text sizes; four backgrounds including dark; reduced motion (follows the device); full keyboard play (press **?** for every shortcut); bottom navigation and large touch targets on phones.
 
 ## Run it
 
-Requires Node 20+ (22 recommended, see `.nvmrc`).
-
 ```bash
 npm install
-npm run dev          # http://localhost:5173
+cp .env.example .env        # optional keys, see below
+npm run dev                 # http://localhost:5173
 ```
 
-Press **Shift + D** on the map to load a lived-in demo profile ("Maya"). The demo script is in [`docs/demo.md`](docs/demo.md).
+Production: `npm run build && npm start` (serves on port 4173, reads the same `.env`).
 
-Production:
+Press **Shift + D** in the Classroom to load a lived-in demo learner ("Maya").
+
+### System tools (for uploads)
+
+| Tool | Used for | Fedora | Debian/Ubuntu |
+|---|---|---|---|
+| Tesseract (English) | printed text in photos and scanned PDF pages | `tesseract tesseract-langpack-eng` | `tesseract-ocr` |
+| Poppler | text inside PDFs, page rendering | `poppler-utils` | `poppler-utils` |
+| ffmpeg | shrinking large photos; building the voice pack | `ffmpeg` | `ffmpeg` |
+
+Without them, the Library still works for stories, pasted text and `.txt` files, and the upload screen says exactly what's missing.
+
+### Keys (`.env`, all optional, all server-side)
+
+| Variable | Enables |
+|---|---|
+| `GROQ_API_KEY` | AI tips after a miss, round insights, the grown-up summary and home ideas, word explanations for uploaded text, and **handwriting reading** (vision model). Model auto-selected from what the key can use (`openai/gpt-oss-120b` first); override with `GROQ_MODEL`. |
+| `FISH_API_KEY` + `FISH_VOICE_ID` | The natural voice, using **Fish Audio** on the free model `s2.1-pro-free` (first choice). Pick a voice in the Fish Audio library and copy its id. |
+| `GOOGLE_TTS_API_KEY` *or* `GOOGLE_APPLICATION_CREDENTIALS` | The natural voice with **Google Cloud Text-to-Speech Chirp 3 HD**, used when Fish isn't set. |
+| *(Groq)* | Next fallback: Groq Orpheus (terms accepted once in the Groq console; about 100 speech requests a day on the free plan). |
+| *(always on)* | **Lumen's own voice**, made on the server with Piper (natural, offline: set `PIPER_MODEL`) or eSpeak. Used whenever a cloud voice can't answer, so Lumo is never silent. |
+
+**Why the server speaks.** Chromium-based browsers on Linux (Chrome, Brave, Chromium) have *no* built-in voices unless started with `--enable-speech-dispatcher`, so Lumen plays audio made by the server instead of relying on the browser. Firefox, Safari and Chrome on Windows/macOS/Android also have their own voices, used only as the last fallback.
+
+The server prints what's on at startup, and **Settings → Lumo's AI** shows the same status, with a "Check again" button.
+
+What's sent: bank words, tags and aggregate numbers for text AI; Lumo's own lines for speech (the learner's name is always removed); uploaded files only to read their text (processed in memory, never stored). Everything else stays in the browser.
+
+### Content scripts
 
 ```bash
-npm run build
-npm start            # serves dist/ and the AI endpoints on http://localhost:4173
+npm run voices       # pre-generate the natural-voice pack (every fixed line, word and syllable) into public/voice/
+npm run dictionary   # draft word explanations for story words (AI, validated; review the output)
+npm run pictures     # download word illustrations (Fluent 3D, MIT) into public/pictures/
+npm run icons        # illustrations for word help and badge art
 ```
-
-Speech uses the browser's built-in voices. Chrome and Edge have the best on-device English voices.
-
-### Optional: AI phrasing with Groq
-
-The language model only **phrases** text: Lumo's insight sentence and the grown-up weekly summary. It never picks words, marks answers or changes levels. Those decisions must be instant, testable and explainable, so they're plain code.
-
-```bash
-cp .env.example .env     # then set GROQ_API_KEY (https://console.groq.com/keys)
-npm run dev              # or: npm run build && npm start
-```
-
-- The key stays on the server (`server/lumo-api.mjs`); the browser only talks to `/api/lumo/*`.
-- Only aggregate numbers and tags are sent: never the learner's name, never anything they typed. `{name}` is filled in on the device.
-- Every reply is validated (word limit, banned words like "wrong" or "dyslexia", no invented numbers). The template shows immediately, and the AI line replaces it only if it passes validation in time (2.5 s for insights, 4 s for the summary).
-- Without a key, the endpoints answer `204` and the app uses its templates. Nothing breaks.
-- Default model `llama-3.3-70b-versatile`; override with `GROQ_MODEL`.
-
-### Static hosting (GitHub Pages)
-
-```bash
-BASE_PATH=/lumen-learn/ VITE_LUMO_API=off npm run build   # dist/ is fully static
-```
-
-`.github/workflows/pages.yml` does this. Enable **Settings → Pages → Source: GitHub Actions**, then run the workflow. The static build has no AI phrasing; templates are used.
 
 ## Develop
 
 ```bash
-npm test             # 106 unit tests: engine, items, word bank, families, progression, report, server
+npm test            # 190 unit tests: engine, courses, practice, speller, segmentation, learning records, games, server, extraction helpers
 npm run typecheck
-npm run smoke        # with `npm run dev` running: plays every screen in headless Chrome,
-                     # fails on console errors, any red, or horizontal scroll at phone width
+npm run smoke       # with the dev server running: 18 real-browser journeys (see below)
 ```
 
-CI (`.github/workflows/ci.yml`) runs typecheck, tests, build and the browser smoke test on every push and pull request.
+`npm run smoke` plays these journeys in headless Chrome, with no test-only hooks: hero → onboarding → Classroom; a full lesson round; refresh keeps progress; an activity with teaching and completion; Playground games with replay and pause (and a check that games don't touch reading mastery); story → whole-word help → pronunciation → back with filters kept; reader keyboard; paste text → reader; **a freshly generated picture through real OCR**; **a freshly generated PDF through the embedded-text path**; section switching keeps state; browser back/forward; shortcuts; the grown-ups gate; "Forget this device" clears progress and uploads; reduced motion; phone layout and touch.
 
-### Project layout
+## Project layout
 
 ```
 src/
-  engine/        pure, tested logic: no React, no DOM
-    adaptive.ts    mastery, word selection, levels, rescue rule, insights, recommendation
-    items.ts       distractors per level, syllable tiles, decoys, scrambling
-    speller.ts     Syllable Speller families, rounds, given endings, spoken syllables
-    progression.ts XP, stars, glow stages, unlocks, streaks
-    session.ts     recording answers and settling a round
-    report.ts      grown-up view numbers and template summary
-    wordbank.ts    word-bank validation (bad entries are skipped, never shown)
-  data/          words.json, families.json, emoji pictures, Lumo's line library
-  state/         profile model + storage/migration, demo profile, React store
-  services/      speech (Web Speech API), sfx (Web Audio), AI client
-  screens/       Welcome, Hub, games/, RoundComplete, GlowUp, Closet, Settings, GrownUp
-  components/    Lumo, icons, doodles, bubble, modal, hold-to-open
-server/          AI proxy (shared by Vite dev server and `npm start`)
-docs/spec/       product spec: games, engine, progression, design system, word bank
-docs/mockups/    the design team's screens
+  router.tsx           History API routes; each section remembers its last page
+  engine/              adaptive engine, courses & units, practice (mistakes, second chances, mixed rounds),
+                       progression, badges, speller, report: pure, tested logic
+  classroom/           activities (content + screen) and learning records per skill
+  library/             story bank, whole-word segmentation, reader, word help, uploads (IndexedDB), extraction client
+  playground/          the four games (logic is tested separately from the UI)
+  screens/             Hero, Classroom, Progress, game screens, round complete, settings, grown-ups
+  services/            voice (Google / Groq / device, voice pack, cache), AI client, sound effects
+server/                Groq text + speech, Google Chirp 3 HD, extraction (Tesseract, Poppler, vision), .env loader
+docs/spec/             product spec, including 10-syllable-speller.md
 ```
 
-### Adding words
+## Honest notes
 
-Edit `src/data/words.json` (or `src/data/families.json` for Syllable Speller), then run `npm test`. The word-bank tests check every entry: syllables join to the word, exactly one length tag, `multi` iff 2+ syllables, 3+ misspellings that aren't sound-alikes, 3+ sound-alikes, and a picture for every description. A person should still read each misspelling and sound-alike once: a script can't tell that a "misspelling" is actually a real word. See [`docs/spec/08-word-bank.md`](docs/spec/08-word-bank.md).
-
-## Decisions beyond the spec
-
-Where the spec was silent or contradicted itself, these choices were made:
-
-- **The target word is only ever spoken, never written in the prompt.** The mockups showed "Find: friend" and "Build the word: rabbit" while answering, which gives the answer away. The word appears in writing once it's found.
-- **Word Builder uses a Check button** once every slot is full (as in the shared round rules), instead of checking automatically, so a mis-tap never counts.
-- **Small pools don't end rounds early.** At level 1 there are only 7 words; when everything was served recently, the least recently served words come back rather than cutting the round short.
-- **The level-up insight names what the learner just showed**: the tag shared by most first-try words this round ("4 short words right"), not whichever tag happens to have the highest score overall.
-- **The auto-fill after a second wrong Word Builder check steps at 600 ms** instead of 300 ms, so each letter can actually be heard.
-- **Glow chests** (every 5th node on the path) give a small +15 XP bonus, which can trigger a glow-up.
+- **No accounts.** Lumen keeps progress on the device by design (the spec forbids sign-in for children's privacy). The account menu offers *Exit to start page* and *Forget this device*, which erases progress, uploads and caches. There is no server-side login to end.
+- **No database.** Stories live in a versioned content file with draft/published status. Drafts show only in development, labelled "Draft: not reviewed".
+- **Handwriting** needs `GROQ_API_KEY`; without it Lumen uses the printed-text reader and says so. Flagged words come from real signals: Tesseract's confidence, or disagreement between the two readers. No confidence numbers are invented.
+- **Word explanations** for story words were drafted by AI and checked by script; a few were corrected by hand. A person should still review them.
+- **The voice pack** is partly built (Groq's free limits). With a Fish Audio or Google key, `npm run voices` builds the rest in one run.
+- **Fish Audio and Google voices** are implemented and tested against mocked responses, but haven't been called live (no keys were available while building).

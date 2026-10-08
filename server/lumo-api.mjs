@@ -8,6 +8,7 @@
 //   POST /api/lumo/tip      { game, word, syllables, options, chosen, tags } -> { text }
 //   POST /api/lumo/summary  { stats }                           -> { text }
 //   POST /api/lumo/ideas    { stats }                           -> { ideas: [{ title, how }] }
+//   POST /api/lumo/explain  { word, sentence }                  -> { meaning, example, emoji }
 //   POST /api/lumo/speech   { text, voice?, style? }            -> audio/wav (natural voice)
 //
 // Needs GROQ_API_KEY (from .env or the environment). Without it, the POST
@@ -16,6 +17,9 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { GOOGLE_VOICES, googleConfigured, googleDefaultVoice, googleSynthesize, GoogleError } from './google-tts.mjs';
+import { localEngine, localSynthesize } from './local-tts.mjs';
+import { FishError, fishConfigured, fishDefaultVoice, fishSynthesize, fishVoices } from './fish-tts.mjs';
 
 const CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 /** Spoken lines are kept on disk too, so restarts never spend the speech quota again. */
@@ -60,7 +64,21 @@ function modelParams(m) {
 }
 const ttsModel = () => process.env.GROQ_TTS_MODEL || 'canopylabs/orpheus-v1-english';
 export const TTS_VOICES = ['hannah', 'autumn', 'diana', 'austin', 'daniel', 'troy'];
-const defaultVoice = () => (TTS_VOICES.includes(process.env.GROQ_TTS_VOICE) ? process.env.GROQ_TTS_VOICE : 'hannah');
+const GROQ_LABELS = { hannah: 'Hannah', autumn: 'Autumn', diana: 'Diana', austin: 'Austin', daniel: 'Daniel', troy: 'Troy' };
+
+/** Which natural voice service to use: Fish Audio, then Google Chirp 3 HD, then Groq Orpheus. */
+export function ttsProvider() {
+  if (fishConfigured()) return 'fish';
+  if (googleConfigured()) return 'google';
+  return process.env.GROQ_API_KEY ? 'groq' : 'none';
+}
+const voiceList = () => (ttsProvider() === 'fish' ? Object.keys(fishVoices()) : ttsProvider() === 'google' ? Object.keys(GOOGLE_VOICES) : TTS_VOICES);
+const voiceLabels = () => (ttsProvider() === 'fish' ? fishVoices() : ttsProvider() === 'google' ? GOOGLE_VOICES : GROQ_LABELS);
+const defaultVoice = () => {
+  if (ttsProvider() === 'fish') return fishDefaultVoice();
+  if (ttsProvider() === 'google') return googleDefaultVoice();
+  return TTS_VOICES.includes(process.env.GROQ_TTS_VOICE) ? process.env.GROQ_TTS_VOICE : 'hannah';
+};
 const hasKey = () => Boolean(process.env.GROQ_API_KEY);
 
 // ------------------------------------------------------------------ validation
@@ -160,6 +178,44 @@ Base them on the "tricky" areas in the data. Prefer multisensory, Orton-Gillingh
 Rules: 2 or 3 ideas. Each has a title (at most 6 words) and "how" (at most 30 words, one or two sentences). No numbers, no jargon, never use: ${SUMMARY_BANNED.join(', ')}. Use example words from the data when helpful.
 Reply as JSON: {"ideas": [{"title": "...", "how": "..."}]}`;
 
+const EXPLAIN_SYSTEM = `You explain words to children aged 7 to 14 who are learning to read, many of them dyslexic.
+For each item, explain the word as it is used in its sentence.
+Rules:
+- "meaning": at most 14 simple words, no jargon, never use the word itself or a form of it.
+- "example": a new short sentence (at most 10 words) that uses the word the same way.
+- "emoji": ONE emoji only if it clearly shows the meaning (like a dog for "pup"); otherwise "".
+- For names of people or animals, the meaning is "a name" plus who they are in the sentence.
+- For small words like "the", "of", "was", explain how the word is used, simply.
+Never use: ${INSIGHT_BANNED.join(', ')}.
+Reply as JSON: {"items": [{"word": "...", "meaning": "...", "example": "...", "emoji": "..."}]}`;
+
+/** A single emoji (with optional variation selector or joiners), or nothing. */
+export function validEmoji(e) {
+  if (!e) return true;
+  return /^\p{Extended_Pictographic}(\uFE0F|\u200D\p{Extended_Pictographic}|\p{Emoji_Modifier})*$/u.test(e);
+}
+
+export function validExplanation(x, word) {
+  if (!x || typeof x.meaning !== 'string' || !x.meaning.trim()) return false;
+  if (words(x.meaning).length > 16 || hasBanned(x.meaning, INSIGHT_BANNED)) return false;
+  if (x.example && (typeof x.example !== 'string' || words(x.example).length > 14 || hasBanned(x.example, INSIGHT_BANNED))) return false;
+  if (!validEmoji(x.emoji ?? '')) return false;
+  const w = String(word).toLowerCase();
+  // The meaning shouldn't just repeat the word (short function words excepted).
+  return w.length <= 3 || !new RegExp(`\\b${w.replace(/[^a-z']/g, '')}\\b`, 'i').test(x.meaning);
+}
+
+/** Explains several words in their sentences. Used live (uploads) and by `npm run dictionary`. */
+export async function explainWords(items, timeoutMs = 8000) {
+  const out = await chatJson(EXPLAIN_SYSTEM, JSON.stringify({ items }), timeoutMs, 150 * items.length);
+  const list = Array.isArray(out.items) ? out.items : [];
+  return items.map(({ word }) => {
+    const x = list.find((i) => String(i?.word ?? '').toLowerCase() === word.toLowerCase());
+    const clean2 = x && { meaning: clean(x.meaning), example: clean(x.example ?? ''), emoji: String(x.emoji ?? '').trim() };
+    return clean2 && validExplanation(clean2, word) ? clean2 : null;
+  });
+}
+
 // ------------------------------------------------------------------ Groq calls
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -216,6 +272,7 @@ class Lru {
   }
 }
 const tipCache = new Lru(500);
+const explainCache = new Lru(2000);
 const audioCache = new Lru(400);
 const audioInFlight = new Map();
 
@@ -243,6 +300,37 @@ const STYLE_PREFIX = { lumo: '[friendly] ', cheer: '[cheerful] ', word: '', slow
 class RateLimited extends Error {}
 
 async function synthesize(text, voice, style) {
+  if (ttsProvider() === 'fish') {
+    if (Date.now() < limitedUntil) throw new RateLimited('Fish Audio limit reached; using another voice for now');
+    try {
+      const audio = await fishSynthesize(text, voice, style);
+      tts = { state: 'ready', checkedAt: Date.now(), message: '' };
+      return audio;
+    } catch (e) {
+      if (e instanceof FishError && (e.status === 402 || e.status === 429 || e.status === 503)) {
+        // Quota or overload: pause Fish for a while; the local voice covers it.
+        limitedUntil = Date.now() + (e.status === 402 ? 60 * 60_000 : 30_000);
+        tts = { state: 'limited', checkedAt: Date.now(), message: e.message };
+        throw new RateLimited(e.message);
+      }
+      tts = { state: 'error', checkedAt: Date.now(), message: String(e.message || e) };
+      throw e;
+    }
+  }
+  if (ttsProvider() === 'google') {
+    try {
+      const audio = await googleSynthesize(text, voice, style);
+      tts = { state: 'ready', checkedAt: Date.now(), message: '' };
+      return audio;
+    } catch (e) {
+      if (e instanceof GoogleError && e.status === 429) {
+        limitedUntil = Date.now() + 30_000;
+        throw new RateLimited('Google speech is busy');
+      }
+      tts = { state: 'error', checkedAt: Date.now(), message: String(e.message || e) };
+      throw e;
+    }
+  }
   if (Date.now() < limitedUntil) throw new RateLimited('speech limit reached; using the device voice for now');
   const input = `${STYLE_PREFIX[style] ?? ''}${text}`.slice(0, 200);
   const res = await fetch(SPEECH_URL, {
@@ -261,6 +349,7 @@ async function synthesize(text, voice, style) {
       const daily = Number(res.headers.get('x-ratelimit-remaining-requests') ?? 1) <= 0;
       const wait = daily ? parseDuration(res.headers.get('x-ratelimit-reset-requests')) : (Number(res.headers.get('retry-after') ?? 10)) * 1000;
       limitedUntil = Date.now() + Math.max(wait, 5000);
+      tts = { state: 'limited', checkedAt: Date.now(), message: daily ? 'daily speech limit reached' : 'speech rate limit reached' };
       throw new RateLimited(daily ? 'daily speech limit reached' : 'speech rate limit reached');
     }
     throw new Error(`Groq speech failed: ${res.status}${code ? ` ${code}` : ''}`);
@@ -269,8 +358,28 @@ async function synthesize(text, voice, style) {
   return Buffer.from(await res.arrayBuffer());
 }
 
+/**
+ * Speech for one line: the cloud voice when it works, otherwise a local voice on
+ * this server (Piper or espeak-ng), so Lumo is never silent because of quotas.
+ */
+async function speechWithFallback(text, voice, style) {
+  if (ttsProvider() !== 'none') {
+    try {
+      return { audio: await speech(text, voice, style), local: false };
+    } catch (e) {
+      if (!(await localEngine())) throw e;
+    }
+  }
+  const key = `local|${style}|${text}`;
+  const hit = audioCache.get(key);
+  if (hit) return { audio: hit, local: true };
+  const audio = await localSynthesize(text, style);
+  audioCache.set(key, audio);
+  return { audio, local: true };
+}
+
 function speech(text, voice, style) {
-  const key = `${ttsModel()}|${voice}|${style}|${text}`;
+  const key = `${ttsProvider() === 'fish' ? 'fish' : ttsProvider() === 'google' ? 'google' : ttsModel()}|${voice}|${style}|${text}`;
   const hit = audioCache.get(key);
   if (hit) return Promise.resolve(hit);
   if (audioInFlight.has(key)) return audioInFlight.get(key);
@@ -296,7 +405,7 @@ function speech(text, voice, style) {
 
 /** Checks (at most every 10 minutes, or on request) whether the natural voice works with this key. */
 async function ttsStatus(force = false) {
-  if (!hasKey()) return { state: 'off', message: 'Add GROQ_API_KEY to .env' };
+  if (ttsProvider() === 'none') return { state: 'off', message: 'Add GOOGLE_TTS_API_KEY (or GROQ_API_KEY) to .env' };
   const fresh = Date.now() - tts.checkedAt < 10 * 60_000;
   if (!force && fresh && tts.state !== 'unknown') return tts;
   try {
@@ -341,6 +450,9 @@ function send(res, status, body) {
 const str = (v, max) => String(v ?? '').slice(0, max);
 const strList = (v, max = 6) => (Array.isArray(v) ? v.slice(0, max).map((x) => str(x, 40)) : []);
 
+let localName = null;
+void localEngine().then((e) => { localName = e; });
+
 /** Secret-free status for the browser and the startup log. */
 export function publicStatus(t = tts) {
   return {
@@ -348,10 +460,14 @@ export function publicStatus(t = tts) {
     model: hasKey() ? resolved.model ?? process.env.GROQ_MODEL ?? MODEL_PREFERENCE[0] : null,
     modelNote: resolved.note,
     tts: {
-      state: hasKey() ? t.state : 'off',
+      provider: ttsProvider(),
+      state: ttsProvider() === 'none' ? 'off' : Date.now() < limitedUntil ? 'limited' : t.state,
       voice: defaultVoice(),
-      voices: TTS_VOICES,
-      message: hasKey() ? t.message || '' : 'Add GROQ_API_KEY to .env',
+      voices: voiceList(),
+      labels: voiceLabels(),
+      message: ttsProvider() !== 'none' ? t.message || '' : 'Add GOOGLE_TTS_API_KEY (or GROQ_API_KEY) to .env',
+      /** A voice made on this server (Piper or espeak-ng), used when the cloud voice can't answer. */
+      local: localName,
     },
   };
 }
@@ -368,7 +484,9 @@ export async function lumoApi(req, res, next) {
   }
 
   if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
-  if (!hasKey()) {
+  if (url === '/api/lumo/speech') {
+    // Speech works without a Groq key: Google, or the local voice on this server.
+  } else if (!hasKey()) {
     res.statusCode = 204;
     return res.end();
   }
@@ -379,12 +497,13 @@ export async function lumoApi(req, res, next) {
     if (url === '/api/lumo/speech') {
       const text = str(body.text, 180).replace(/[\u0000-\u001f[\]]/g, ' ').trim();
       if (!text) return send(res, 400, { error: 'text required' });
-      const voice = TTS_VOICES.includes(body.voice) ? body.voice : defaultVoice();
+      const voice = voiceList().includes(body.voice) ? body.voice : defaultVoice();
       const style = Object.hasOwn(STYLE_PREFIX, body.style) ? body.style : 'lumo';
       try {
-        const audio = await speech(text, voice, style);
+        const { audio, local } = await speechWithFallback(text, voice, style);
         res.statusCode = 200;
-        res.setHeader('content-type', 'audio/wav');
+        res.setHeader('x-lumo-voice', local ? 'local' : ttsProvider());
+        res.setHeader('content-type', !local && (ttsProvider() === 'google' || ttsProvider() === 'fish') ? 'audio/mpeg' : 'audio/wav');
         res.setHeader('cache-control', 'private, max-age=86400');
         return res.end(audio);
       } catch (e) {
@@ -421,6 +540,20 @@ export async function lumoApi(req, res, next) {
         tipCache.set(key, text);
       }
       return send(res, 200, { text });
+    }
+
+    if (url === '/api/lumo/explain') {
+      const word = str(body.word, 40).trim();
+      const sentence = str(body.sentence, 300).trim();
+      if (!word || !/^[\p{L}'’-]+$/u.test(word)) return send(res, 400, { error: 'a single word is required' });
+      const key = `${word.toLowerCase()}|${sentence.toLowerCase()}`;
+      let x = explainCache.get(key);
+      if (!x) {
+        [x] = await explainWords([{ word, sentence }], 5000);
+        if (!x) return send(res, 422, { error: 'invalid reply' });
+        explainCache.set(key, x);
+      }
+      return send(res, 200, x);
     }
 
     if (url === '/api/lumo/summary') {

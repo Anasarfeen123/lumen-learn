@@ -31,7 +31,16 @@ export interface LumoStatus {
   ai: boolean;
   model: string | null;
   modelNote?: string;
-  tts: { state: 'ready' | 'limited' | 'needs-terms' | 'off' | 'error' | 'unknown'; voice: string; voices: string[]; message: string };
+  tts: {
+    provider?: 'fish' | 'google' | 'groq' | 'none';
+    state: 'ready' | 'limited' | 'needs-terms' | 'off' | 'error' | 'unknown';
+    voice: string;
+    voices: string[];
+    labels?: Record<string, string>;
+    message: string;
+    /** A voice made on the server itself (works in every browser, no limits). */
+    local?: 'piper' | 'espeak' | null;
+  };
 }
 
 const API = import.meta.env.VITE_LUMO_API ?? '/api/lumo';
@@ -45,6 +54,8 @@ const hasWindow = typeof window !== 'undefined';
 export const deviceSpeechSupported = hasWindow && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
 let prefs: VoicePrefs = { engine: 'auto', naturalVoice: 'hannah', deviceVoice: null, privateWords: [] };
+/** After the server's speech limit is hit, skip live speech until this time (pack + device voice cover it). */
+let serverLimitedUntil = 0;
 let status: LumoStatus | null = null;
 const statusListeners = new Set<(s: LumoStatus | null) => void>();
 
@@ -54,8 +65,16 @@ export function setVoicePrefs(p: Partial<VoicePrefs>) {
 
 // ------------------------------------------------------------------ status
 
+let statusReady: Promise<unknown> | null = null;
+
 export async function loadStatus(refresh = false): Promise<LumoStatus | null> {
   if (API === 'off') return null;
+  const job = loadStatusNow(refresh);
+  statusReady ??= job;
+  return job;
+}
+
+async function loadStatusNow(refresh: boolean): Promise<LumoStatus | null> {
   try {
     const res = await fetch(`${API}/status${refresh ? '?refresh=1' : ''}`, { signal: AbortSignal.timeout(15_000) });
     status = res.ok ? ((await res.json()) as LumoStatus) : null;
@@ -66,14 +85,38 @@ export async function loadStatus(refresh = false): Promise<LumoStatus | null> {
   return status;
 }
 
+/** Why sound isn't playing, for a visible, honest notice (null when it works). */
+export type SoundProblem = 'blocked' | 'device' | null;
+let problem: SoundProblem = null;
+const problemListeners = new Set<(p: SoundProblem) => void>();
+function reportProblem(p: SoundProblem) {
+  if (p === problem) return;
+  problem = p;
+  problemListeners.forEach((fn) => fn(p));
+}
+export function onSoundProblem(fn: (p: SoundProblem) => void): () => void {
+  problemListeners.add(fn);
+  fn(problem);
+  return () => problemListeners.delete(fn);
+}
+
 export function onStatus(fn: (s: LumoStatus | null) => void): () => void {
   statusListeners.add(fn);
   fn(status);
   return () => statusListeners.delete(fn);
 }
 
+/** The voice actually used: the learner's choice if this provider has it, else the server's default. */
+export function naturalVoice(): string {
+  const voices = status?.tts.voices ?? [];
+  if (voices.includes(prefs.naturalVoice)) return prefs.naturalVoice;
+  if (status?.tts.voice) return status.tts.voice;
+  return Object.keys(pack)[0] ?? prefs.naturalVoice;
+}
+
+/** The server can speak: a cloud voice that's ready, or its own local voice. */
 export function naturalReady(): boolean {
-  return status?.tts.state === 'ready';
+  return status?.tts.state === 'ready' || Boolean(status?.tts.local);
 }
 
 // ------------------------------------------------------------------ prebuilt voice pack
@@ -96,18 +139,20 @@ export function packVoices(): string[] {
 }
 
 function packUrl(text: string, style: SpeechStyle): string | null {
-  const file = pack[prefs.naturalVoice]?.[phraseKey(text, style)];
+  const file = pack[naturalVoice()]?.[phraseKey(text, style)];
   return file ? `${BASE}voice/${file}` : null;
 }
 
 /** The natural voice can speak if the server can make speech, or the voice pack has this voice. */
 function naturalAvailable(): boolean {
-  return naturalReady() || Boolean(pack[prefs.naturalVoice] && Object.keys(pack[prefs.naturalVoice]).length);
+  return naturalReady() || Boolean(pack[naturalVoice()] && Object.keys(pack[naturalVoice()]).length);
 }
 
 /** Which engine will speak right now. */
 export function activeEngine(): 'natural' | 'device' | 'none' {
-  if (prefs.engine !== 'device' && naturalAvailable()) return 'natural';
+  // Over the server's speech limit and no pack for this voice? Use the device until it's back.
+  const limited = (Date.now() < serverLimitedUntil || status?.tts.state === 'limited') && !status?.tts.local && !Object.keys(pack[naturalVoice()] ?? {}).length;
+  if (prefs.engine !== 'device' && naturalAvailable() && !limited) return 'natural';
   return deviceSpeechSupported ? 'device' : 'none';
 }
 
@@ -217,7 +262,12 @@ function sayOnDevice(text: string, rate: number, my: number, attempt = 0): Promi
       resolve();
     };
     u.onend = () => done();
-    u.onerror = (e) => done(e.error === 'synthesis-failed' || e.error === 'synthesis-unavailable');
+    u.onerror = (e) => {
+      if (e.error === 'not-allowed') reportProblem('blocked');
+      else if (attempt === 1 && (e.error === 'synthesis-failed' || e.error === 'synthesis-unavailable')) reportProblem('device');
+      done(e.error === 'synthesis-failed' || e.error === 'synthesis-unavailable');
+    };
+    u.onstart = () => reportProblem(null);
     // Some engines never fire onend; never let the app wait on speech forever.
     const guard = setTimeout(() => done(), 2000 + (text.length * 120) / rate);
     synth.speak(u);
@@ -229,8 +279,6 @@ function sayOnDevice(text: string, rate: number, my: number, attempt = 0): Promi
 const audioUrls = new Map<string, Promise<string>>();
 const AUDIO_CACHE = 300;
 const CACHE_NAME = 'lumo-voice-v1';
-/** After Groq's speech limit is hit, skip live speech until this time (pack + device voice cover it). */
-let serverLimitedUntil = 0;
 
 /** Leaves the learner's name out of anything sent off the device. */
 export function withoutPrivateWords(text: string, words: string[] = prefs.privateWords): string {
@@ -269,7 +317,7 @@ function limited<T>(job: () => Promise<T>, urgent = false): Promise<T> {
 
 /** Spoken lines generated on the fly are kept in Cache Storage, so they're instant next time. */
 async function fromServer(text: string, style: SpeechStyle, urgent: boolean): Promise<Blob> {
-  const cacheKey = `${location.origin}/__lumo-voice/${prefs.naturalVoice}/${style}/${encodeURIComponent(text)}`;
+  const cacheKey = `${location.origin}/__lumo-voice/${naturalVoice()}/${style}/${encodeURIComponent(text)}`;
   let cache: Cache | null = null;
   try {
     cache = await caches.open(CACHE_NAME);
@@ -283,14 +331,17 @@ async function fromServer(text: string, style: SpeechStyle, urgent: boolean): Pr
     const res = await fetch(`${API}/speech`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ text, voice: prefs.naturalVoice, style }),
+      body: JSON.stringify({ text, voice: naturalVoice(), style }),
       signal: AbortSignal.timeout(12_000),
     });
-    if (res.status === 429) serverLimitedUntil = Date.now() + Number(res.headers.get('retry-after') ?? 60) * 1000;
+    if (res.status === 429) {
+      serverLimitedUntil = Date.now() + Number(res.headers.get('retry-after') ?? 60) * 1000;
+      if (status) status = { ...status, tts: { ...status.tts, state: 'limited' } };
+    }
     if (res.status !== 200) throw new Error(`speech ${res.status}`);
     return res.blob();
   }, urgent);
-  void cache?.put(cacheKey, new Response(blob, { headers: { 'content-type': blob.type || 'audio/wav' } })).catch(() => {});
+  void cache?.put(cacheKey, new Response(blob, { headers: { 'content-type': blob.type || 'audio/mpeg' } })).catch(() => {});
   return blob;
 }
 
@@ -298,7 +349,7 @@ async function fromServer(text: string, style: SpeechStyle, urgent: boolean): Pr
 function fetchAudio(text: string, style: SpeechStyle, urgent = true): Promise<string> {
   const fromPack = packUrl(text, style);
   if (fromPack) return Promise.resolve(fromPack);
-  const key = `${prefs.naturalVoice}|${style}|${text}`;
+  const key = `${naturalVoice()}|${style}|${text}`;
   const hit = audioUrls.get(key);
   if (hit) {
     audioUrls.delete(key);
@@ -344,6 +395,9 @@ function playUrl(url: string, rate: number, my: number): Promise<void> {
 // ------------------------------------------------------------------ public API
 
 async function sayParts(parts: Part[], my: number) {
+  // On a freshly loaded page, wait briefly for the server's voice status before choosing an engine.
+  if (!status && statusReady) await Promise.race([statusReady, new Promise((r) => setTimeout(r, 2000))]);
+  if (my !== token) return;
   const engine = activeEngine();
   if (engine === 'none') return;
   if (engine === 'natural') {
@@ -413,4 +467,90 @@ export function prefetchCommon(lines: string[]) {
   prefetch(lines.map((text) => ({ text, style: 'lumo' as const })));
 }
 
-if (hasWindow) void loadVoicePack();
+if (hasWindow) {
+  void loadVoicePack();
+  window.addEventListener('lumen:navigate', () => stopSpeaking());
+}
+
+// ------------------------------------------------------------------ read-aloud for the reader
+
+export interface ReadAloud {
+  pause(): void;
+  resume(): void;
+  stop(): void;
+}
+
+export interface ReadAloudOptions {
+  rate: number;
+  /** Called with the character index of each word as it's spoken, when the voice reports it. */
+  onWord?: (index: number) => void;
+  /** Called with the index of the chunk (paragraph) being read. */
+  onChunk?: (chunk: number) => void;
+  onEnd?: () => void;
+}
+
+/**
+ * Reads text aloud chunk by chunk (one paragraph per chunk). The device voice
+ * reports word boundaries, so callers can highlight the word being spoken; the
+ * natural voice doesn't, so only the chunk is reported. Nothing is faked.
+ */
+export function readAloud(chunks: { text: string; start: number }[], opts: ReadAloudOptions): ReadAloud {
+  let my = 0;
+  let i = 0;
+  let resumeFrom = 0; // character offset in the current chunk, so resume carries on from the last word
+  const useDevice = deviceSpeechSupported && (prefs.engine === 'device' || !naturalReady());
+
+  const deviceChunk = async () => {
+    await ensureVoices();
+    if (my !== token) return;
+    if (i >= chunks.length) { opts.onEnd?.(); return; }
+    const { text, start } = chunks[i];
+    opts.onChunk?.(i);
+    const offset = resumeFrom;
+    const u = new SpeechSynthesisUtterance(text.slice(offset));
+    u.rate = opts.rate;
+    const voice = pickDeviceVoice();
+    if (voice) { u.voice = voice; u.lang = voice.lang; }
+    u.onboundary = (e) => {
+      if (my !== token || e.name !== 'word') return;
+      resumeFrom = offset + e.charIndex;
+      opts.onWord?.(start + offset + e.charIndex);
+    };
+    const next = () => {
+      if (my !== token) return;
+      i++;
+      resumeFrom = 0;
+      void deviceChunk();
+    };
+    u.onend = next;
+    u.onerror = next;
+    window.speechSynthesis.speak(u);
+  };
+
+  const naturalChunk = async () => {
+    if (my !== token) return;
+    if (i >= chunks.length) { opts.onEnd?.(); return; }
+    opts.onChunk?.(i);
+    // Natural audio is made a sentence at a time; there are no word timings to highlight.
+    const sentences = chunks[i].text.match(/[^.!?]+[.!?]+["”']?|[^.!?]+$/g) ?? [chunks[i].text];
+    await sayParts(sentences.map((s) => ({ text: s.trim(), rate: opts.rate, pauseMs: 150, style: 'lumo' as const })), my);
+    if (my !== token) return;
+    i++;
+    void naturalChunk();
+  };
+
+  const begin = () => {
+    stopSpeaking();
+    my = token;
+    void (useDevice ? deviceChunk() : naturalChunk());
+  };
+  begin();
+
+  return {
+    // Pausing stops the voice and remembers the place; device voices resume from the last word,
+    // natural audio from the start of the paragraph (it has no word timings).
+    pause() { if (my === token) stopSpeaking(); },
+    resume() { begin(); },
+    stop() { if (my === token) stopSpeaking(); i = chunks.length; },
+  };
+}

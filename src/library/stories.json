@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "stories": [
+    {
+      "id": "pip-the-pup",
+      "version": 1,
+      "status": "published",
+      "title": "Pip the Pup",
+      "summary": "Pip has a red ball. Where did it go?",
+      "level": 1,
+      "topic": "Animals",
+      "cover": "dog",
+      "pages": [
+        "Pip is a pup. Pip has a red ball.\n\nPip likes to run and jump with the ball.",
+        "The ball rolls. It rolls past the cat. It rolls past the bed.\n\nPip sniffs. Where is the ball?",
+        "Pip looks in the box. No ball.\n\nPip looks in the bag. No ball.",
+        "The sun is hot. Pip naps in the shade.\n\nThe ball was by the tree! Pip is glad. Good pup, Pip."
+      ]
+    },
+    {
+      "id": "the-big-ship",
+      "version": 1,
+      "status": "published",
+      "title": "The Big Ship",
+      "summary": "Sam and Dad watch a big ship come in to the dock.",
+      "level": 1,
+      "topic": "Places",
+      "cover": "ship",
+      "pages": [
+        "Sam and Dad go to the dock. The wind is cold.\n\nSam has a hat and a red coat.",
+        "A big ship is on the sea. It has a long deck.\n\nA fish jumps up. Splash!",
+        "The ship comes in. A man ties it up with a rope.\n\nDad lifts Sam up to see.",
+        "\"When I am big, I will sail a ship,\" said Sam.\n\nDad smiles. \"Then I will wave from the dock.\""
+      ]
+    },
+    {
+      "id": "frog-and-the-rain",
+      "version": 1,
+      "status": "published",
+      "title": "Frog and the Rain",
+      "summary": "Frog waits for rain on a hot day. Then the clouds come.",
+      "level": 2,
+      "topic": "Nature",
+      "cover": "frog",
+      "pages": [
+        "It was a hot day by the pond. Frog sat on a stone.\n\n\"I need rain,\" said Frog. \"My pond is low.\"",
+        "Duck swam by. \"The sky is blue,\" said Duck. \"No rain today.\"\n\nFrog sighed and sat very still.",
+        "Then the wind blew. Grey clouds rolled in.\n\nDrip. Drop. Drip. The rain began to fall.",
+        "The pond grew and grew. Frog hopped and sang.\n\n\"Thank you, rain!\" said Frog. Duck splashed too."
+      ]
+    },
+    {
+      "id": "the-moon-boat",
+      "version": 1,
+      "status": "published",
+      "title": "The Moon Boat",
+      "summary": "Mia dreams she sails a boat all the way to the moon.",
+      "level": 2,
+      "topic": "Adventure",
+      "cover": "moon",
+      "pages": [
+        "Mia could not sleep. She looked out at the bright moon.\n\nA little boat floated by her window.",
+        "Mia climbed in. The boat sailed up, up, up, past the trees and the clouds.\n\nThe stars were like tiny lamps.",
+        "On the moon, it was quiet and soft. Mia jumped very high.\n\nShe found a shiny stone and put it in her coat.",
+        "The boat took her home. Mia woke up in bed.\n\nWas it a dream? In her coat was a shiny stone."
+      ]
+    },
+    {
+      "id": "rabbits-garden",
+      "version": 1,
+      "status": "published",
+      "title": "Rabbit's Garden",
+      "summary": "Rabbit plants a garden, and friends help it grow.",
+      "level": 3,
+      "topic": "Friends",
+      "cover": "rabbit",
+      "pages": [
+        "Rabbit wanted a garden. She dug the soil and planted seeds in tidy rows.\n\n\"Grow, little seeds,\" she said.",
+        "Every morning, Rabbit watered the garden. But nothing happened.\n\nShe felt sad and sat down on a log.",
+        "Her friend Mouse came by. \"Seeds take time,\" said Mouse. \"Let's wait together.\"\n\nThey played and talked and watched the sky.",
+        "One day, green shoots came up. Then carrots! Then flowers!\n\nRabbit shared the carrots with all her friends. \"A garden is better with friends,\" she said."
+      ]
+    },
+    {
+      "id": "the-friendly-dragon",
+      "version": 1,
+      "status": "published",
+      "title": "The Friendly Dragon",
+      "summary": "Everyone runs from the dragon, but the dragon just wants a friend.",
+      "level": 3,
+      "topic": "Friends",
+      "cover": "dragon",
+      "pages": [
+        "High on a hill lived a dragon called Dot. Dot was green and very big.\n\nWhen people saw Dot, they ran away.",
+        "\"I only want a friend,\" said Dot. A tear rolled down her nose.\n\nA girl called Ana heard her and walked up the hill.",
+        "\"Are you sad?\" asked Ana. Dot nodded. \"Nobody wants to play with me.\"\n\n\"I will,\" said Ana. \"Can you fly?\"",
+        "Dot gave Ana a ride over the town. Everyone looked up and waved.\n\nAfter that, nobody ran from Dot. She had a whole town of friends."
+      ]
+    },
+    {
+      "id": "elephant-remembers",
+      "version": 1,
+      "status": "published",
+      "title": "The Elephant Who Remembered",
+      "summary": "Grandma Elephant remembers the way to water when the river dries up.",
+      "level": 4,
+      "topic": "Animals",
+      "cover": "elephant",
+      "pages": [
+        "The summer was long and dry. The river near the elephants' home became a thin, muddy stream.\n\nThe young elephants were thirsty and worried.",
+        "Grandma Elephant lifted her trunk and sniffed the air. \"I remember a lake,\" she said slowly. \"Beyond the three tall rocks.\"",
+        "The herd walked for a whole day. They passed the first rock, then the second, then the third.\n\nThe little ones were tired, but Grandma kept them going.",
+        "At last, they saw it: a beautiful lake, full of cool water.\n\nThe young elephants splashed and sprayed. \"How did you remember?\" they asked. Grandma smiled. \"Some things are important enough to keep.\""
+      ]
+    },
+    {
+      "id": "the-volcano-island",
+      "version": 1,
+      "status": "published",
+      "title": "Adventure on Volcano Island",
+      "summary": "Two explorers follow an old treasure map to a smoking island.",
+      "level": 5,
+      "topic": "Adventure",
+      "cover": "volcano",
+      "pages": [
+        "Kai and Lena found an old treasure map in their grandfather's attic. In the corner was a drawing of an island with a volcano.\n\n\"That's Volcano Island,\" said Lena. \"It's real.\"",
+        "They borrowed a small boat and sailed across the bay. As they got closer, they saw a thin line of smoke rising from the mountain.\n\n\"The volcano is still sleeping,\" said Kai. \"Mostly.\"",
+        "The map led them through the jungle, past a waterfall, to a cave covered in green vines. Inside, it was cool and dark.\n\nLena switched on her torch. Something was shining.",
+        "It wasn't gold. It was a box of their grandfather's old notebooks, full of drawings of birds, plants and shells.\n\n\"This is the treasure,\" said Kai quietly. \"He wanted us to be explorers too.\""
+      ]
+    },
+    {
+      "id": "knight-and-the-knife",
+      "version": 1,
+      "status": "draft",
+      "title": "The Knight Who Could Not Write",
+      "summary": "A draft story about silent letters. Not reviewed yet.",
+      "level": 4,
+      "topic": "Words",
+      "cover": "writing hand",
+      "pages": [
+        "Sir Ned was a brave knight, but he found writing hard.\n\nThe letters in words like knight and write seemed to hide from him.",
+        "A wise owl taught him a trick: some letters are quiet. You write them, but you do not say them.\n\nSir Ned practised every evening by the fire."
+      ]
+    }
+  ]
+}

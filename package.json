@@ -18,7 +18,9 @@
     "check:words": "vitest run src/engine/wordbank.test.ts",
     "smoke": "node scripts/smoke.mjs",
     "voices": "node scripts/build-voices.mjs",
-    "pictures": "node scripts/fetch-pictures.mjs"
+    "pictures": "node scripts/fetch-pictures.mjs",
+    "dictionary": "node scripts/build-dictionary.mjs",
+    "icons": "node scripts/fetch-icons.mjs"
   },
   "dependencies": {
     "@fontsource/atkinson-hyperlegible": "^5.3.0",

@@ -12,12 +12,15 @@ import '@fontsource/opendyslexic/latin-400.css';
 import '@fontsource/opendyslexic/latin-700.css';
 import './styles/global.css';
 import { LumenProvider } from './state/store';
+import { RouterProvider } from './router';
 import { App } from './App';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <LumenProvider>
-      <App />
-    </LumenProvider>
+    <RouterProvider>
+      <LumenProvider>
+        <App />
+      </LumenProvider>
+    </RouterProvider>
   </StrictMode>,
 );

@@ -2,19 +2,45 @@ import type { CSSProperties } from 'react';
 import { useLumen } from '../state/store';
 import { GLOW_HEX, STAGES, stageIndex, type HatId } from '../engine/progression';
 
-export type Pose = 'float' | 'wave' | 'read' | 'point' | 'think' | 'cheer' | 'fly' | 'sit' | 'sleep' | 'hero';
+/**
+ * Lumo's states. The first group comes from the mascot board (public/lumo/poses);
+ * older names map onto them so every screen uses the same artwork. Lumo never
+ * looks angry or disappointed: a miss gets "encouraging" or "guiding".
+ */
+export type Pose =
+  | 'welcome' | 'idle' | 'thinking' | 'guiding' | 'celebrating' | 'encouraging' | 'reading' | 'goodbye'
+  | 'surprised' | 'loading' | 'resting' | 'love' | 'eating' | 'drinking' | 'laptop' | 'happy'
+  // older names, kept as aliases
+  | 'float' | 'wave' | 'read' | 'point' | 'think' | 'cheer' | 'fly' | 'sit' | 'sleep' | 'hero';
 
 const B = import.meta.env.BASE_URL;
+const pose = (name: string) => `${B}lumo/poses/${name}.png`;
 const SRC: Record<Pose, string> = {
-  float: `${B}lumo/pose-float.png`,
-  wave: `${B}lumo/pose-wave.png`,
-  read: `${B}lumo/pose-read.png`,
-  point: `${B}lumo/pose-point.png`,
-  think: `${B}lumo/pose-think.png`,
-  cheer: `${B}lumo/pose-cheer.png`,
-  fly: `${B}lumo/pose-fly.png`,
-  sit: `${B}lumo/pose-sit.png`,
-  sleep: `${B}lumo/pose-sleep.png`,
+  welcome: pose('excited'),
+  idle: pose('idle'),
+  thinking: pose('thinking'),
+  guiding: pose('idea'),
+  celebrating: pose('cheering'),
+  encouraging: pose('happy'),
+  reading: pose('reading'),
+  goodbye: pose('flying'),
+  surprised: pose('surprised'),
+  loading: pose('peek'),
+  resting: pose('tired'),
+  love: pose('love'),
+  eating: pose('eating'),
+  drinking: pose('drinking'),
+  laptop: pose('laptop'),
+  happy: pose('happy'),
+  float: pose('idle'),
+  wave: pose('excited'),
+  read: pose('reading'),
+  point: pose('idea'),
+  think: pose('thinking'),
+  cheer: pose('cheering'),
+  fly: pose('flying'),
+  sit: pose('idle'),
+  sleep: pose('tired'),
   hero: `${B}lumo/lumo-hero.png`,
 };
 

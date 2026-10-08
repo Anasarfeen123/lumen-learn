@@ -5,6 +5,8 @@ import { dayKey } from '../engine/progression';
 import type { GameId, Mastery, Result } from '../engine/types';
 import { newProfile, type HistoryEntry, type PathNode, type Profile, type RoundLog } from './profile';
 import { seeded } from '../engine/random';
+import { COURSES, slotAt } from '../engine/courses';
+import type { Mistakes } from '../engine/practice';
 
 export const DEMO_MASTERY: Mastery = {
   short: { m: 0.85, n: 14 },
@@ -14,6 +16,15 @@ export const DEMO_MASTERY: Mastery = {
   long: { m: 0.42, n: 5 },
   irregular: { m: 0.44, n: 6 },
   blend: { m: 0.7, n: 5 },
+};
+
+/** Words Maya needed help with, ready for a "Practice mistakes" round. */
+const DEMO_MISTAKES: Mistakes = {
+  because: { game: 'detective', misses: 2, rights: 0, t: '2026-10-06T16:20:00Z' },
+  rabbit: { game: 'detective', misses: 1, rights: 0, t: '2026-10-07T16:30:00Z' },
+  boat: { game: 'detective', misses: 1, rights: 0, t: '2026-10-05T16:15:00Z' },
+  said: { game: 'detective', misses: 1, rights: 0, t: '2026-10-07T16:31:00Z' },
+  bed: { game: 'builder', misses: 1, rights: 0, t: '2026-10-05T16:40:00Z' },
 };
 
 /** Mastery at the start of the week, so "Getting stronger" has something to show. */
@@ -57,8 +68,14 @@ export function demoProfile(now = new Date()): Profile {
     const game = items[0][0];
     const firsts = items.filter(([, , res]) => res === 'first').length;
     rounds.push({ t: start.toISOString(), game, seconds: minutesPerRound[r] * 60, firsts, xp: 40 });
-    path.push({ kind: 'round', game, stars: firsts >= 4 ? 3 : firsts >= 2 ? 2 : 1 });
-    if ((path.length + 1) % 5 === 0) path.push({ kind: 'chest' });
+    // Walk Word Explorer's path: the first unit done, two nodes into the second.
+    const stars = firsts >= 4 ? 3 : firsts >= 2 ? 2 : 1;
+    while (path.length < 10) {
+      const slot = slotAt(COURSES[0], path.length, DEMO_MISTAKES, ['detective', 'sound', 'builder', 'speller']);
+      if (slot.kind === 'chest') { path.push({ kind: 'chest' }); continue; }
+      path.push(slot.kind === 'round' ? { kind: 'round', game: slot.game!, stars } : { kind: slot.kind, stars });
+      break;
+    }
   }
   const weekAgo = new Date(now);
   weekAgo.setDate(now.getDate() - 5);
@@ -73,7 +90,11 @@ export function demoProfile(now = new Date()): Profile {
     mastery: structuredClone(DEMO_MASTERY),
     history,
     rounds,
-    path,
+    courses: { explorer: path },
+    activeCourse: 'explorer',
+    mistakes: structuredClone(DEMO_MISTAKES),
+    wordsLearned: history.filter((h) => h.result === 'first').length,
+    badges: [],
     recentWords: [],
     insights: ["'b' and 'd' words are tricky. Let's practise a few more."],
     streak: { days: 3, lastDay: dayKey(now) },

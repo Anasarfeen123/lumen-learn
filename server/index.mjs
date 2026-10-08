@@ -6,6 +6,7 @@ import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadEnv } from './env.mjs';
 import { lumoApi } from './lumo-api.mjs';
+import { extractApi } from './extract.mjs';
 import { logSetup } from './setup-log.mjs';
 
 const env = loadEnv();
@@ -46,7 +47,7 @@ async function serveStatic(req, res) {
   }
 }
 
-createServer((req, res) => lumoApi(req, res, () => serveStatic(req, res))).listen(PORT, () => {
+createServer((req, res) => lumoApi(req, res, () => extractApi(req, res, () => serveStatic(req, res)))).listen(PORT, () => {
   console.log(`Lumen running at http://localhost:${PORT}`);
   void logSetup(env);
 });

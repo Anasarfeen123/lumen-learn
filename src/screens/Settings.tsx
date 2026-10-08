@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useLumen } from '../state/store';
 import { Close } from '../components/Icons';
 import { Modal } from '../components/ui';
-import { deviceSpeechSupported, loadStatus, onDeviceVoices, speak, activeEngine } from '../services/speech';
+import { deviceSpeechSupported, loadStatus, onDeviceVoices, speak, activeEngine, naturalVoice } from '../services/speech';
 import { useLumoStatus } from '../services/useLumoStatus';
 import type { Settings as S } from '../state/profile';
 
@@ -80,8 +80,9 @@ export function Settings() {
           options={[['auto', 'Best available'], ['natural', 'Natural (online)'], ['device', 'This device']]} />
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 10 }}>
           {s.voiceEngine !== 'device' && (
-            <select className="select" value={s.naturalVoice} onChange={(e) => set('naturalVoice', e.target.value)} aria-label="Natural voice">
-              {(status?.tts.voices ?? Object.keys(VOICE_LABEL)).map((v) => <option key={v} value={v}>{VOICE_LABEL[v] ?? v}</option>)}
+            <select className="select" value={(status?.tts.voices ?? []).includes(s.naturalVoice) ? s.naturalVoice : status?.tts.voice ?? s.naturalVoice}
+              onChange={(e) => set('naturalVoice', e.target.value)} aria-label="Natural voice">
+              {(status?.tts.voices ?? Object.keys(VOICE_LABEL)).map((v) => <option key={v} value={v}>{status?.tts.labels?.[v] ?? VOICE_LABEL[v] ?? v}</option>)}
             </select>
           )}
           {s.voiceEngine === 'device' && deviceSpeechSupported && (
@@ -93,7 +94,7 @@ export function Settings() {
           <button type="button" className="btn small" onClick={test}>Test</button>
         </div>
         <p className="privacy" style={{ margin: '8px 0 0' }} role="status">
-          Speaking with: {activeEngine() === 'natural' ? `natural voice (${VOICE_LABEL[s.naturalVoice] ?? s.naturalVoice})` : activeEngine() === 'device' ? "this device's voice" : 'no voice available. Try Chrome or Edge'}.
+          Speaking with: {activeEngine() === 'natural' && status?.tts.state !== 'ready' && status?.tts.local ? `Lumen's own voice (${status.tts.local === 'piper' ? 'Piper' : 'eSpeak'}, made on the server)` : activeEngine() === 'natural' ? `natural voice (${status?.tts.labels?.[naturalVoice()] ?? VOICE_LABEL[naturalVoice()] ?? naturalVoice()}${status?.tts.provider === 'google' ? ', Google Chirp 3 HD' : status?.tts.provider === 'fish' ? ', Fish Audio' : ''})` : activeEngine() === 'device' ? "this device's voice" : 'no voice available. Try Chrome or Edge'}.
         </p>
       </Field>
       <Field label="Lumo's AI">
@@ -126,9 +127,9 @@ function AiStatus({ status, natural, checking, onRecheck }: {
     <div className="privacy" style={{ display: 'grid', gap: 6 }}>
       <span>Tips and summaries: {status.ai ? `on (Groq · ${status.model})` : 'off. Add GROQ_API_KEY to the .env file, then restart.'}</span>
       <span>
-        Natural voice: {natural ? 'ready' : status.tts.state === 'needs-terms'
+        Natural voice{status.tts.provider === 'fish' ? ' (Fish Audio)' : status.tts.provider === 'google' ? ' (Google Chirp 3 HD)' : status.tts.provider === 'groq' ? ' (Groq)' : ''}: {natural ? 'ready' : status.tts.state === 'needs-terms'
           ? <>needs one step. A Groq admin must accept the voice model's terms <a href={TERMS_URL} target="_blank" rel="noreferrer">here</a>, then press Check again.</>
-          : status.tts.state === 'off' ? 'off (needs GROQ_API_KEY).' : `unavailable${status.tts.message ? ` (${status.tts.message})` : ''}.`}
+          : status.tts.state === 'off' ? 'off. Add GOOGLE_TTS_API_KEY (or GROQ_API_KEY) to the .env file.' : `unavailable${status.tts.message ? ` (${status.tts.message})` : ''}.`}
       </span>
       <span><button type="button" className="btn small" onClick={onRecheck} disabled={checking}>{checking ? 'Checking…' : 'Check again'}</button></span>
     </div>

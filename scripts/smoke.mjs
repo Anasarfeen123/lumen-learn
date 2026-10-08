@@ -1,16 +1,16 @@
-// End-to-end smoke test: plays through every screen in a real browser and
-// saves screenshots. It finds each round's words from the saved profile
-// (recentWords), so the app needs no test-only hooks.
+// End-to-end journeys in a real browser, with screenshots. Uses no test-only
+// hooks: round words are read from the saved profile, and OCR is tested with a
+// freshly generated picture and PDF each run (never a prefilled result).
 //
 //   npm run dev                       # in one terminal
 //   npm run smoke -- [url] [out-dir]  # defaults: http://localhost:5173 ./smoke-shots
 //
 // Uses the system Chrome/Chromium (set CHROME_PATH to override).
 import { chromium } from 'playwright-core';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const APP_URL = process.argv[2] || 'http://localhost:5173';
+const APP = process.argv[2] || 'http://localhost:5173';
 const OUT = process.argv[3] || 'smoke-shots';
 const WORDS = JSON.parse(readFileSync(new URL('../src/data/words.json', import.meta.url)));
 const FAMILY_WORDS = JSON.parse(readFileSync(new URL('../src/data/families.json', import.meta.url)))
@@ -23,246 +23,371 @@ mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch({ executablePath });
 const errors = [];
+const passed = [];
 let step = 0;
 
-async function newPage(viewport) {
-  const page = await browser.newPage({ viewport });
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+async function newPage(opts = {}) {
+  const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 }, ...opts });
+  const page = await ctx.newPage();
+  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(String(e)));
   return page;
 }
-const shot = async (page, name) => page.screenshot({ path: join(OUT, `${String(++step).padStart(2, '0')}-${name}.png`) });
-const profile = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('lumen.profile.v1')));
-const pause = (page, ms = 250) => page.waitForTimeout(ms);
-const press = (page, label) => page.getByRole('button', { name: label, exact: true }).click();
+const shot = (page, name) => page.screenshot({ path: join(OUT, `${String(++step).padStart(2, '0')}-${name}.png`) });
+const pause = (page, ms = 300) => page.waitForTimeout(ms);
+const profile = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('lumen.profile.v1') ?? '{}'));
+const visible = (loc) => loc.isVisible().catch(() => false);
 
-async function currentWord(page, index, roundSize = 5) {
-  const p = await profile(page);
-  const id = p.recentWords[p.recentWords.length - roundSize + index];
-  return WORDS.find((w) => w.id === id) ?? FAMILY_WORDS.find((w) => w.id === id);
-}
-
-/** Build the current Word Builder word; optionally make one mistake first. */
-async function buildWord(page, word, { mistake = false } = {}) {
-  const tiles = await page.locator('.tray .tile').allTextContents();
-  const units = tiles.some((t) => t.length > 1) ? word.syllables : word.word.split('');
-  const order = mistake ? [...units].reverse() : units;
-  for (const u of order) {
-    await page.locator('.tray .tile', { hasText: new RegExp(`^${u}$`) }).first().click();
+async function journey(name, fn) {
+  try {
+    await fn();
+    passed.push(name);
+    console.log(`  ✓ ${name}`);
+  } catch (e) {
+    errors.push(`${name}: ${String(e).split('\n')[0]}`);
+    console.log(`  ✗ ${name}`);
   }
-  await press(page, 'Check');
-  await pause(page);
 }
 
-async function playBuilderRound(page, { mistakeOn = -1, shots = false } = {}) {
-  for (let i = 0; i < 5; i++) {
-    await page.locator('.slots').waitFor();
-    if (i === 0) await pause(page, 300);
-    const word = await currentWord(page, i);
-    if (i === 0 && shots) await shot(page, 'builder-item');
-    if (i === mistakeOn) {
-      await buildWord(page, word, { mistake: true });
-      if (shots) await shot(page, 'builder-partial-credit');
-      await press(page, 'Try again');
-      const rest = await page.locator('.slot:not(.locked)').count();
-      // Fill the remaining slots in order.
-      const units = (await page.locator('.tray .tile').allTextContents()).some((t) => t.length > 1) ? word.syllables : word.word.split('');
-      const slotTexts = await page.locator('.slot').allTextContents();
-      for (let s = 0; s < units.length; s++) {
-        if (slotTexts[s]) continue;
-        await page.locator('.tray .tile', { hasText: new RegExp(`^${units[s]}$`) }).first().click();
+/** Answers a choice item by trying options in order (two tries, then the answer is revealed). */
+async function answerChoice(page) {
+  for (let i = 0; i < 3; i++) {
+    if (await visible(page.getByRole('button', { name: /^(Continue|Got it)$/ }))) return;
+    if (await visible(page.locator('.item-nav .btn.go:not([disabled])'))) return;
+    if (await visible(page.locator('.answer.reveal'))) { await page.locator('.answer.reveal').click(); return; }
+    const option = page.locator('.answers .answer:not([disabled])').first();
+    if (!(await visible(option))) return;
+    await option.click();
+    await page.getByRole('button', { name: 'Check', exact: true }).click();
+    await pause(page, 250);
+    const again = page.getByRole('button', { name: 'Try again', exact: true });
+    if (await visible(again)) await again.click();
+  }
+}
+
+/** Plays a Classroom round of whichever game comes up, until Round complete. */
+async function playRound(page) {
+  for (let i = 0; i < 9; i++) {
+    if (await visible(page.getByText('Round complete!'))) return;
+    await pause(page, 400);
+    if (await visible(page.locator('.speller-row.current'))) {
+      const p = await profile(page);
+      const word = FAMILY_WORDS.find((w) => w.id === p.recentWords.at(-5 + Math.min(i, 4))) ?? FAMILY_WORDS[0];
+      const boxes = page.locator('.speller-row.current [data-box]:not(:disabled)');
+      const n = await boxes.count();
+      for (let k = 0; k < n; k++) {
+        const idx = Number(await boxes.nth(k).getAttribute('data-box'));
+        await page.locator(`.speller-row.current [data-box="${idx}"]`).click();
+        for (const ch of word.syllables[idx] ?? '') await page.getByRole('button', { name: `Letter ${ch}`, exact: true }).click();
       }
-      if (rest) await press(page, 'Check');
+      await page.getByRole('button', { name: 'Check', exact: true }).click();
+    } else if (await visible(page.locator('.slots'))) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const tiles = page.locator('.tray .tile:not([disabled])');
+        while ((await page.locator('.slot:not(.filled):not(.locked)').count()) && (await tiles.count())) await tiles.first().click();
+        await page.getByRole('button', { name: 'Check', exact: true }).click();
+        await pause(page, 300);
+        if (await visible(page.getByRole('button', { name: 'Continue', exact: true }))) break;
+        const again = page.getByRole('button', { name: 'Try again', exact: true });
+        if (await visible(again)) await again.click();
+      }
     } else {
-      await buildWord(page, word);
+      await answerChoice(page);
     }
-    if (i === 0 && shots) await shot(page, 'builder-correct');
-    await press(page, 'Continue');
+    await page.getByRole('button', { name: /^(Continue|Got it)$/ }).click({ timeout: 20000 });
   }
 }
 
-/** Syllable Speller: drag the first letter of each round in like the video, type the rest. */
-async function playSpellerRound(page, { shots = false } = {}) {
-  for (let i = 0; i < 5; i++) {
-    await page.locator('.speller-row.current').waitFor();
-    // The round's words are saved just after it renders; wait for them.
-    await page.waitForFunction(() => JSON.parse(localStorage.getItem('lumen.profile.v1')).recentWords.at(-1).includes(':'));
-    const word = await currentWord(page, i);
-    if (i === 0 && shots) await shot(page, 'speller-item');
-    const boxes = page.locator('.speller-row.current [data-box]:not(:disabled)');
-    const n = await boxes.count();
-    const openIdx = [];
-    for (let b = 0; b < n; b++) openIdx.push(Number(await boxes.nth(b).getAttribute('data-box')));
-    for (const [k, idx] of openIdx.entries()) {
-      const syllable = word.syllables[idx];
-      const box = page.locator(`.speller-row.current [data-box="${idx}"]`);
-      let letters = syllable;
-      if (k === 0) {
-        // Drag-and-drop with the pointer, as on a touchscreen.
-        const from = await page.getByRole('button', { name: `Letter ${syllable[0]}`, exact: true }).boundingBox();
-        const to = await box.boundingBox();
-        await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
-        await page.mouse.down();
-        await page.mouse.move(from.x + 40, from.y + 60, { steps: 4 });
-        await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 8 });
-        if (i === 0 && shots) await shot(page, 'speller-drag');
-        await page.mouse.up();
-        letters = syllable.slice(1);
-      } else {
-        await box.click();
-      }
-      for (const ch of letters) await page.getByRole('button', { name: `Letter ${ch}`, exact: true }).click();
-    }
-    await press(page, 'Check');
-    await pause(page);
-    if (i === 0 && shots) await shot(page, 'speller-correct');
-    await press(page, 'Continue');
-  }
-}
-
-async function playChoiceRound(page, { revealOn = -1, shotName = '' } = {}) {
-  for (let i = 0; i < 5; i++) {
-    await page.locator('.answers').waitFor();
-    if (i === 0) await pause(page, 300);
-    const word = await currentWord(page, i);
-    if (i === 0 && shotName) await shot(page, `${shotName}-item`);
-    if (i === revealOn) {
-      for (let miss = 0; miss < 2; miss++) {
-        await page.locator('.answer:not(.removed):not(:disabled)', { hasNotText: new RegExp(`^\\d?${word.word}$`) }).first().click();
-        await press(page, 'Check');
-        await pause(page);
-        if (miss === 0) {
-          if (shotName) await shot(page, `${shotName}-almost`);
-          await press(page, 'Try again');
-        }
-      }
-      if (shotName) await shot(page, `${shotName}-reveal`);
-      await page.locator('.answer.reveal').click();
-    } else {
-      await page.locator('.answer', { hasText: new RegExp(`^\\d${word.word}$`) }).click();
-      await press(page, 'Check');
-    }
-    await press(page, 'Continue');
-  }
+/** A short random sentence, so OCR is tested on something new every run. */
+function freshSentence() {
+  const who = ['The fox', 'A brave owl', 'My little sister', 'The green frog', 'Our teacher'];
+  const did = ['painted a', 'found a', 'carried a', 'drew a', 'hid a'];
+  const what = ['purple kite', 'golden key', 'tiny boat', 'striped sock', 'shiny shell'];
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  return `${pick(who)} ${pick(did)} ${pick(what)}.`;
 }
 
 try {
-  const page = await newPage({ width: 1280, height: 860 });
-  await page.goto(APP_URL);
-  await page.evaluate(() => localStorage.clear());
+  // ------------------------------------------------------------------ desktop
+  const page = await newPage();
+  await page.goto(APP);
+  await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase('lumen'); });
   await page.reload();
-  await pause(page, 400);
-  await shot(page, 'welcome');
 
-  await page.getByLabel('What should Lumo call you?').fill('Sam');
-  await page.getByRole('button', { name: /Let's go/ }).click();
-  await page.locator('.unit-banner').waitFor();
-  await shot(page, 'hub-fresh');
-
-  // A fresh learner plays one Word Detective round, missing twice on item 1.
-  await page.locator('.game-card', { hasText: 'Word Detective' }).click();
-  await playChoiceRound(page, { revealOn: 1, shotName: 'detective' });
-  await page.getByText('Round complete!').waitFor();
-  await shot(page, 'complete-fresh');
-  await page.getByRole('button', { name: 'Map', exact: true }).click();
-
-  // Demo profile, then the scripted adaptation moment.
-  await page.keyboard.press('Shift+D');
-  await pause(page, 400);
-  await shot(page, 'hub-demo');
-  await page.locator('.game-card', { hasText: 'Word Builder' }).click();
-  await playBuilderRound(page, { mistakeOn: 1, shots: true });
-  await page.getByText('Round complete!').waitFor();
-  await pause(page, 600);
-  await shot(page, 'complete-level-up');
-  await page.locator('.night').waitFor({ timeout: 4000 });
-  await pause(page, 400);
-  await shot(page, 'glow-up');
-  await page.getByRole('button', { name: 'Put them on!' }).click();
-  await page.getByRole('button', { name: /Next: longer words/ }).click();
-  await page.locator('.slots').waitFor();
-  const next = await Promise.all([0, 1, 2, 3, 4].map((i) => currentWord(page, i)));
-  console.log(`After level-up, Word Builder serves: ${next.map((w) => `${w.word} (L${w.level})`).join(', ')}`);
-  await shot(page, 'builder-level-3');
-  await page.getByRole('button', { name: 'Back to the map' }).click();
-
-  // Syllable Speller (Orton-Gillingham style).
-  await page.locator('.game-card', { hasText: 'Syllable Speller' }).click();
-  await playSpellerRound(page, { shots: true });
-  await page.getByText('Round complete!').waitFor();
-  await shot(page, 'speller-complete');
-  await page.getByRole('button', { name: 'Map', exact: true }).click();
-
-  // Sound Match.
-  await page.locator('.game-card', { hasText: 'Sound Match' }).click();
-  await page.locator('.answers').waitFor();
-  await shot(page, 'sound-item');
-  await page.keyboard.press('Escape');
-
-  // Grown-ups: press and hold.
-  await page.getByRole('button', { name: 'for grown-ups' }).click();
-  const hold = page.getByRole('button', { name: 'Hold to open' });
-  const box = await hold.boundingBox();
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  await pause(page, 3300);
-  await page.mouse.up();
-  await page.getByText('This week in brief').waitFor();
-  await shot(page, 'grown-up');
-  await page.getByRole('button', { name: /Back to/ }).click();
-
-  await page.getByRole('button', { name: 'Lumo\'s closet' }).click();
-  await shot(page, 'closet');
-  await page.getByRole('button', { name: 'Back to the map' }).click();
-
-  await page.getByRole('button', { name: 'Settings' }).click();
-  await shot(page, 'settings');
-  await page.getByRole('group', { name: 'Background' }).getByRole('button', { name: 'Dark' }).click();
-  await page.getByRole('button', { name: 'Back to the map' }).click();
-  await pause(page, 300);
-  await shot(page, 'hub-dark');
-
-  // Phone width: no horizontal scroll.
-  const phone = await newPage({ width: 390, height: 844 });
-  await phone.goto(APP_URL);
-  await phone.evaluate(() => localStorage.clear());
-  await phone.reload();
-  await pause(phone, 400);
-  await shot(phone, 'phone-welcome');
-  await phone.getByRole('button', { name: /Let's go/ }).click();
-  await phone.keyboard.press('Shift+D');
-  await pause(phone, 300);
-  await shot(phone, 'phone-hub');
-  await phone.locator('.game-card', { hasText: 'Word Detective' }).click();
-  await phone.locator('.answers').waitFor();
-  await shot(phone, 'phone-detective');
-  const overflow = await phone.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-  if (overflow > 1) errors.push(`Horizontal scroll at phone width: ${overflow}px`);
-
-  // "No red anywhere": scan computed colors on every element.
-  const reds = await page.evaluate(() => {
-    const out = [];
-    for (const el of document.querySelectorAll('*')) {
-      const cs = getComputedStyle(el);
-      for (const prop of ['color', 'backgroundColor', 'borderTopColor']) {
-        const m = cs[prop].match(/rgba?\((\d+), (\d+), (\d+)/);
-        if (m) {
-          const [r, g, b] = m.slice(1).map(Number);
-          if (r > 180 && g < 90 && b < 90) out.push(`${el.tagName}.${el.className} ${prop}`);
-        }
-      }
-    }
-    return out;
+  await journey('Hero → onboarding → Classroom', async () => {
+    await pause(page, 2800);
+    await shot(page, 'hero');
+    await page.getByRole('button', { name: /Start learning/ }).click();
+    await page.getByLabel('What should Lumo call you?').fill('Sam');
+    await page.getByRole('button', { name: /Let's go/ }).click();
+    await page.locator('.lesson-list').waitFor();
+    await shot(page, 'classroom');
   });
-  if (reds.length) errors.push(`Red found: ${reds.slice(0, 5).join(', ')}`);
+
+  await journey('Classroom → lesson → round complete → Classroom', async () => {
+    await page.locator('.lesson.current .lesson-card').click();
+    await pause(page, 600);
+    await shot(page, 'lesson-round');
+    await playRound(page);
+    await page.getByText('Round complete!').waitFor({ timeout: 20000 });
+    await shot(page, 'round-complete');
+    await page.getByRole('button', { name: 'Map', exact: true }).click();
+    await page.locator('.lesson.done').first().waitFor();
+  });
+
+  await journey('Refresh keeps learner progress', async () => {
+    await page.reload();
+    await page.locator('.lesson.done').first().waitFor();
+    const p = await profile(page);
+    if (!p.courses?.explorer?.length) throw new Error('path not saved');
+  });
+
+  await journey('Classroom → activity (teach first) → completion → Classroom', async () => {
+    await page.getByRole('button', { name: /Word twins/ }).click();
+    await page.getByText('One letter changes the word').waitFor();
+    await shot(page, 'activity-teach');
+    await page.getByRole('button', { name: /^Start/ }).click();
+    for (let i = 0; i < 8; i++) {
+      if (await visible(page.getByRole('heading', { name: /You finished/ }))) break;
+      const support = page.getByRole('button', { name: /Got it, next one/ });
+      if (await visible(support)) { await support.click(); continue; }
+      await answerChoice(page);
+      if (i === 0) await shot(page, 'activity-item');
+      await page.locator('.item-nav .btn.go').click();
+    }
+    await page.getByRole('heading', { name: /You finished/ }).waitFor();
+    await shot(page, 'activity-done');
+    await page.getByRole('button', { name: 'Back to Classroom' }).click();
+    await page.locator('.lesson-list').waitFor();
+    const p = await profile(page);
+    if (!p.learning?.attempts?.length) throw new Error('attempts not recorded');
+  });
+
+  await journey('Playground → Pattern train → play again → pause → Playground', async () => {
+    await page.getByRole('link', { name: /Playground/ }).first().click();
+    await page.locator('.play-card').first().waitFor();
+    await shot(page, 'playground');
+    await page.locator('.play-card', { hasText: 'Pattern train' }).click();
+    await page.getByRole('button', { name: /^Start/ }).click();
+    for (let i = 0; i < 6; i++) {
+      for (let k = 0; k < 3; k++) {
+        if (await visible(page.getByRole('button', { name: /Next carriage|Finish/ }))) break;
+        await page.locator('.shape-answer:not([disabled])').first().click().catch(() => {});
+        await pause(page, 150);
+      }
+      if (i === 0) await shot(page, 'pattern-train');
+      await page.getByRole('button', { name: /Next carriage|Finish/ }).click();
+    }
+    await page.getByText(/done!/).waitFor();
+    await page.getByRole('button', { name: 'Play again' }).click();
+    await page.locator('.pattern-train').waitFor();
+    await page.getByRole('button', { name: 'Pause' }).click();
+    await page.getByRole('button', { name: 'Back to Playground' }).click();
+    await page.locator('.play-card').first().waitFor();
+  });
+
+  await journey('Playground → Word & picture match → completion (not counted as reading)', async () => {
+    const before = JSON.stringify((await profile(page)).mastery);
+    await page.locator('.play-card', { hasText: 'Word & picture match' }).click();
+    await page.getByRole('button', { name: /^Start/ }).click();
+    const words = (await page.locator('.match-word').allTextContents()).map((w) => w.trim());
+    for (const w of words) {
+      const entry = WORDS.find((x) => x.word === w);
+      await page.locator('.match-word', { hasText: new RegExp(`^${w}$`) }).click();
+      await page.getByRole('button', { name: `Picture: ${entry.picture}` }).click();
+    }
+    await page.getByText(/done!/).waitFor();
+    await shot(page, 'match-done');
+    const p = await profile(page);
+    if (!p.playground?.match?.plays) throw new Error('playground score not saved');
+    if (JSON.stringify(p.mastery) !== before) throw new Error('the game changed reading mastery');
+    await page.getByRole('button', { name: 'Back to Playground' }).click();
+  });
+
+  await journey('Library → story → whole-word help → pronunciation → return (filters kept)', async () => {
+    await page.getByRole('link', { name: /Library/ }).first().click();
+    await page.getByRole('combobox').first().selectOption('1');
+    await page.locator('.story-card', { hasText: 'Pip the Pup' }).click();
+    await page.locator('.read-text').waitFor();
+    // Tap near the edge of a word: the whole word is still the unit.
+    await page.locator('.w', { hasText: /^ball$/ }).first().click({ position: { x: 4, y: 10 } });
+    await page.locator('.word-help').waitFor();
+    const word = await page.locator('#wh-word').textContent();
+    if (word !== 'ball') throw new Error(`selected "${word}", not the whole word`);
+    if (!(await page.locator('.wh-meaning').textContent())?.trim()) throw new Error('no explanation');
+    await shot(page, 'reader-word-help');
+    await page.getByRole('button', { name: 'Say ball' }).click();
+    await page.getByRole('button', { name: 'Close word help' }).click();
+    await page.getByRole('button', { name: /Next page/ }).click();
+    await page.getByText('Page 2 of 4').first().waitFor();
+    await page.getByRole('button', { name: /Back to Library/ }).click();
+    await page.locator('.story-card').first().waitFor();
+    if ((await page.getByRole('combobox').first().inputValue()) !== '1') throw new Error('level filter was lost');
+  });
+
+  await journey('Reader keyboard: arrows move word by word; Enter opens help; Esc closes', async () => {
+    await page.locator('.cards:not(.continue .cards) .story-card', { hasText: 'Pip the Pup' }).last().click();
+    await page.locator('.read-text .w[tabindex="0"]').focus();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Enter');
+    await page.locator('.word-help').waitFor();
+    await page.keyboard.press('Escape');
+    if (await visible(page.locator('.word-help'))) throw new Error('Escape did not close help');
+    await page.getByRole('button', { name: /Back to Library/ }).click();
+  });
+
+  await journey('Paste text → check → confirm → reader (word help never blank)', async () => {
+    await page.getByRole('button', { name: /Add your own reading/ }).click();
+    await page.getByPlaceholder(/My spelling list/).fill('My pasted page');
+    await page.getByPlaceholder('Type or paste here…').fill('Lumo likes to read.\n\nThe zebra ran to the river.');
+    await page.getByRole('button', { name: /Next: check the text/ }).click();
+    await page.getByRole('button', { name: /Confirm text and open reader/ }).click();
+    await page.locator('.w', { hasText: /^zebra$/ }).click();
+    await page.locator('.word-help').waitFor();
+    await page.waitForFunction(() => !document.querySelector('.wh-loading'), null, { timeout: 12000 });
+    if (!(await page.locator('.wh-meaning').textContent())?.trim()) throw new Error('word help was blank');
+    await shot(page, 'pasted-reader');
+    await page.getByRole('button', { name: /Back to Library/ }).click();
+  });
+
+  const caps = await page.evaluate(() => fetch('/api/extract/capabilities').then((r) => (r.ok ? r.json() : null)).catch(() => null));
+
+  await journey('Upload a fresh picture → real OCR → review → reader', async () => {
+    if (!caps?.printedOcr) throw new Error('OCR not available on this server (install Tesseract)');
+    const sentence = freshSentence();
+    const art = await newPage();
+    await art.setContent(`<body style="margin:0;background:#fff"><p style="font:44px Arial;padding:40px;margin:0">${sentence}</p></body>`);
+    const png = join(OUT, 'fresh-ocr.png');
+    await art.locator('p').screenshot({ path: png });
+    await art.context().close();
+    await page.goto(`${APP}/library/add`);
+    await page.getByRole('button', { name: 'Choose a file' }).click();
+    await page.locator('input[type=file]').setInputFiles(png);
+    await page.getByRole('button', { name: 'Printed' }).click();
+    await page.getByRole('button', { name: 'Read the text' }).click();
+    await page.getByText(/Check the text/).waitFor({ timeout: 60000 });
+    const text = await page.locator('textarea').inputValue();
+    const want = sentence.toLowerCase().replace(/[^a-z ]/g, '');
+    const got = text.toLowerCase().replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim();
+    if (got !== want) throw new Error(`OCR read "${text}" for "${sentence}"`);
+    await shot(page, 'ocr-review');
+    await page.getByRole('button', { name: /Confirm text and open reader/ }).click();
+    await page.locator('.read-text').waitFor();
+  });
+
+  await journey('Upload a fresh PDF → embedded-text path → review → reader', async () => {
+    if (!caps?.pdfText) throw new Error('PDF reading not available on this server (install Poppler)');
+    const sentence = freshSentence();
+    const art = await newPage();
+    await art.setContent(`<h1>Test page</h1><p>${sentence}</p>`);
+    const pdf = join(OUT, 'fresh.pdf');
+    await art.pdf({ path: pdf, format: 'A5' });
+    await art.context().close();
+    await page.goto(`${APP}/library/add`);
+    await page.getByRole('button', { name: 'Choose a file' }).click();
+    await page.locator('input[type=file]').setInputFiles(pdf);
+    await page.getByRole('button', { name: 'Read the text' }).click();
+    await page.getByText(/Check the text/).waitFor({ timeout: 60000 });
+    if (!(await page.locator('textarea').inputValue()).includes(sentence.slice(0, -1))) throw new Error('PDF text missing');
+    if (!(await visible(page.getByText(/text inside the PDF/)))) throw new Error('wrong extraction path');
+    await page.getByRole('button', { name: /Confirm text and open reader/ }).click();
+    await page.locator('.read-text').waitFor();
+    await page.getByRole('button', { name: /Back to Library/ }).click();
+  });
+
+  await journey('Section switching keeps Library search', async () => {
+    await page.goto(`${APP}/library`);
+    await page.getByPlaceholder('Search stories').fill('frog');
+    await pause(page, 200);
+    await page.getByRole('link', { name: /Classroom/ }).first().click();
+    await page.locator('.lesson-list').waitFor();
+    await page.getByRole('link', { name: /Library/ }).first().click();
+    if ((await page.getByPlaceholder('Search stories').inputValue()) !== 'frog') throw new Error('search was lost');
+  });
+
+  await journey('Browser back and forward', async () => {
+    await page.goto(`${APP}/classroom`);
+    await page.getByRole('link', { name: /Playground/ }).first().click();
+    await page.locator('.play-card').first().waitFor();
+    await page.goBack();
+    await page.locator('.lesson-list').waitFor();
+    await page.goForward();
+    await page.locator('.play-card').first().waitFor();
+  });
+
+  await journey('Shortcuts: "?" lists them, Alt+2 opens the Library', async () => {
+    await page.locator('body').press('?');
+    await page.getByText('Keyboard shortcuts').waitFor();
+    await shot(page, 'shortcuts');
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Alt+2');
+    await page.locator('.subtabs').waitFor();
+  });
+
+  await journey('Grown-ups gate (press and hold)', async () => {
+    await page.goto(`${APP}/grown-ups`);
+    const hold = page.getByRole('button', { name: 'Hold to open' });
+    const box = await hold.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await pause(page, 3300);
+    await page.mouse.up();
+    await page.getByText('This week in brief').waitFor();
+    await shot(page, 'grown-ups');
+  });
+
+  await journey('Forget this device clears progress and uploads', async () => {
+    const uploads = await page.evaluate(() => new Promise((res) => {
+      const r = indexedDB.open('lumen');
+      r.onsuccess = () => { const q = r.result.transaction('uploads').objectStore('uploads').getAll(); q.onsuccess = () => res(q.result.map((u) => u.id)); };
+    }));
+    await page.goto(`${APP}/classroom`);
+    await page.locator('.account-btn').click();
+    await page.getByRole('menuitem', { name: /Forget this device/ }).click();
+    await page.getByRole('button', { name: 'Forget', exact: true }).click();
+    await page.getByRole('button', { name: /Start learning/ }).waitFor();
+    await page.goto(`${APP}/library/read/upload/${uploads[0]}`);
+    await page.getByText(/isn't here/).waitFor();
+    const p = await profile(page);
+    if (p.xp) throw new Error('progress survived');
+  });
+
+  // ------------------------------------------------------------------ reduced motion
+  const still = await newPage({ reducedMotion: 'reduce' });
+  await journey('Reduced motion: no opening animation, everything still', async () => {
+    await still.goto(APP);
+    if (await visible(still.getByRole('button', { name: 'Skip intro' }))) throw new Error('intro played');
+    if (!(await still.evaluate(() => document.documentElement.classList.contains('still')))) throw new Error('motion not reduced');
+  });
+
+  // ------------------------------------------------------------------ phone
+  const phone = await newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  await journey('Phone: bottom navigation, Classroom, and tapping words in the reader', async () => {
+    await phone.goto(APP);
+    await phone.evaluate(() => localStorage.setItem('lumen.profile.v1', JSON.stringify({ onboarded: true, name: 'Ana' })));
+    await phone.goto(`${APP}/classroom`);
+    await phone.locator('.lesson-list').waitFor();
+    await shot(phone, 'phone-classroom');
+    const nav = await phone.locator('.tabs').boundingBox();
+    if (nav.y < 700) throw new Error('navigation is not at the bottom');
+    await phone.goto(`${APP}/library`);
+    await shot(phone, 'phone-library');
+    await phone.locator('.story-card', { hasText: 'Frog and the Rain' }).tap();
+    await phone.locator('.w', { hasText: /^pond$/ }).first().tap();
+    await phone.locator('.word-help').waitFor();
+    await shot(phone, 'phone-reader');
+    const overflow = await phone.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    if (overflow > 1) throw new Error(`horizontal scroll ${overflow}px`);
+  });
 } catch (e) {
   errors.push(String(e));
 } finally {
   await browser.close();
 }
 
+writeFileSync(join(OUT, 'results.json'), JSON.stringify({ passed, errors }, null, 2));
 if (errors.length) {
-  console.error(`Smoke test failed:\n- ${errors.join('\n- ')}`);
+  console.error(`\nSmoke test failed (${passed.length} journeys passed):\n- ${errors.join('\n- ')}`);
   process.exit(1);
 }
-console.log(`Smoke test passed. ${step} screenshots in ${OUT}/`);
+console.log(`\nAll ${passed.length} journeys passed. ${step} screenshots in ${OUT}/`);

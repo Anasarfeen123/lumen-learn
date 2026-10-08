@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { completeRound, markServed, nextNodeIsChest, openChest, recordAnswer, rollWeekSnapshot } from './session';
+import { secondChances } from './practice';
 import { buildReport, fillName, summaryStats, summaryTemplate } from './report';
 import { BY_ID } from './wordbank';
 import { migrate, newProfile } from '../state/profile';
@@ -21,7 +22,7 @@ describe('a round, end to end', () => {
     expect(p.recentWords).toEqual(['cat', 'sun', 'pig', 'dog', 'fish']);
 
     const start = new Date(NOW.getTime() - 75_000);
-    const { profile, summary } = completeRound(p, 'builder', results, words, start, {}, NOW);
+    const { profile, summary } = completeRound(p, 'builder', words.map((word) => ({ word, game: 'builder' as const })), results, [], start, {}, NOW);
     expect(summary.newLevel).toBe(2);
     expect(summary.stars).toBe(3);
     expect(summary.xp).toBe(10 * 4 + 6 + 10 + 5); // items + round bonus + first round today
@@ -29,7 +30,7 @@ describe('a round, end to end', () => {
     expect(summary.recommended).toBe('builder');
     expect(profile.xp).toBe(summary.xp);
     expect(profile.rounds[0].seconds).toBe(75);
-    expect(profile.path).toEqual([{ kind: 'round', game: 'builder', stars: 3 }]);
+    expect(profile.courses.explorer).toEqual([{ kind: 'round', game: 'builder', stars: 3 }]);
     expect(profile.streak.days).toBe(1);
   });
 
@@ -46,20 +47,51 @@ describe('a round, end to end', () => {
     const results: Result[] = ['first', 'first', 'first', 'first', 'hint'];
     let q = p;
     words.forEach((w, i) => { q = recordAnswer(q, 'builder', w, results[i], NOW); });
-    const { summary, profile } = completeRound(q, 'builder', results, words, NOW, p.mastery, NOW);
+    const { summary, profile } = completeRound(q, 'builder', words.map((word) => ({ word, game: 'builder' as const })), results, [], NOW, p.mastery, NOW);
     expect(summary.newLevel).toBe(3);
     expect(summary.insight.text).toBe("You're doing great with short words. Let's try longer words!");
     expect(summary.stages.map((s) => s.name)).toEqual(['Shine']);
     expect(profile.unlocked).toContain('star-crown');
   });
 
-  it('every fifth path node is a glow chest', () => {
+  it('the fifth node of every unit is a glow chest', () => {
     let p = newProfile(NOW);
-    p = { ...p, path: Array.from({ length: 4 }, () => ({ kind: 'round' as const, game: 'detective' as const, stars: 2 })) };
+    p = { ...p, courses: { explorer: Array.from({ length: 4 }, () => ({ kind: 'round' as const, game: 'detective' as const, stars: 2 })) } };
     expect(nextNodeIsChest(p)).toBe(true);
     const opened = openChest(p);
-    expect(opened.profile.path.at(-1)).toEqual({ kind: 'chest' });
+    expect(opened.profile.courses.explorer?.at(-1)).toEqual({ kind: 'chest' });
     expect(opened.profile.xp).toBe(15);
+  });
+
+  it('brings missed words back as second chances, and gives bonus XP for fixing them', () => {
+    const p = newProfile(NOW);
+    const words = ['cat', 'sun', 'pig', 'dog', 'fish'].map((id) => BY_ID.get(id)!);
+    const items = words.map((word) => ({ word, game: 'detective' as const }));
+    const results: Result[] = ['first', 'shown', 'first', 'hint', 'first'];
+    const again = secondChances(items, results);
+    expect(again.map((i) => i.word.id)).toEqual(['sun', 'dog']); // reveals first
+    const { summary } = completeRound(p, 'detective', items, results, ['first', 'hint'], NOW, {}, NOW);
+    expect(summary.bonusFixed).toBe(1);
+    expect(summary.xp).toBe(10 * 3 + 2 + 6 + 10 + 5 + 5);
+  });
+
+  it('keeps a mistakes bank: a miss goes in, two clean answers take it out', () => {
+    let p = newProfile(NOW);
+    const sun = BY_ID.get('sun')!;
+    p = recordAnswer(p, 'detective', sun, 'hint', NOW);
+    expect(p.mistakes.sun).toMatchObject({ misses: 1, rights: 0 });
+    p = recordAnswer(p, 'detective', sun, 'first', NOW);
+    expect(p.mistakes.sun?.rights).toBe(1);
+    p = recordAnswer(p, 'detective', sun, 'first', NOW);
+    expect(p.mistakes.sun).toBeUndefined();
+  });
+
+  it('mixed and review rounds never change a game level', () => {
+    const p = newProfile(NOW);
+    const items = ['cat', 'sun', 'pig', 'dog', 'fish'].map((id) => ({ word: BY_ID.get(id)!, game: 'builder' as const }));
+    const { summary, profile } = completeRound(p, 'mixed', items, ['first', 'first', 'first', 'first', 'first'], [], NOW, {}, NOW);
+    expect(summary.newLevel).toBe(summary.oldLevel);
+    expect(profile.courses.explorer?.at(-1)).toEqual({ kind: 'mixed', stars: 3 });
   });
 });
 

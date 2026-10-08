@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLumen } from '../state/store';
+import { useRouter } from '../router';
+import { HoldButton } from '../components/ui';
 import { Lumo } from '../components/Lumo';
 import { Bulb, Trend } from '../components/Icons';
 import { buildReport, fillName, GAME_NAME, homeIdeas, MIN_N, summaryStats, summaryTemplate, type Band, type TagRow } from '../engine/report';
@@ -98,7 +100,7 @@ export function GrownUp() {
             <>
               <p className="learn" style={{ fontWeight: 600, fontSize: 22, margin: '0 0 8px' }}>Try 3 minutes of {GAME_NAME[report.suggestedGame]}.</p>
               <p style={{ marginTop: 0 }}>It focuses on {report.tricky[0]?.plain.toLowerCase() ?? 'the trickiest area'}, {name ? `${name}'s` : 'the'} trickiest area this week.</p>
-              <button type="button" className="btn primary small" onClick={() => go({ name: 'game', game: report.suggestedGame! })}>
+              <button type="button" className="btn primary small" onClick={() => go({ name: 'game', mode: report.suggestedGame! })}>
                 Start {GAME_NAME[report.suggestedGame]}
               </button>
             </>
@@ -142,6 +144,31 @@ export function GrownUp() {
         </div>
       </footer>
       {confirm && <ResetConfirm onCancel={() => setConfirm(false)} onConfirm={reset} />}
+    </main>
+  );
+}
+
+const GATE_KEY = 'lumen.gate';
+
+/**
+ * Press and hold for 3 seconds before the grown-up view. Not security: it keeps
+ * a young learner from wandering in. Stays open for this browser session.
+ */
+export function GrownUpGate() {
+  const [open, setOpen] = useState(() => {
+    try { return sessionStorage.getItem(GATE_KEY) === '1'; } catch { return false; }
+  });
+  const { back } = useRouter();
+  if (open) return <GrownUp />;
+  return (
+    <main className="screen gate" id="main">
+      <Lumo pose="guiding" size={120} motion="none" />
+      <h1 className="title" tabIndex={-1}>For grown-ups</h1>
+      <p>Press and hold for 3 seconds to see the practice summary.</p>
+      <div className="actions">
+        <HoldButton onDone={() => { try { sessionStorage.setItem(GATE_KEY, '1'); } catch { /* blocked */ } setOpen(true); }}>Hold to open</HoldButton>
+        <button type="button" className="link" onClick={() => back('/classroom')}>Back</button>
+      </div>
     </main>
   );
 }

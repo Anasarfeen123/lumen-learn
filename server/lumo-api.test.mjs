@@ -88,3 +88,55 @@ describe('Groq call', () => {
     expect((await call('POST', '/api/lumo/summary', { stats: { minutesThisWeek: 24 } })).status).toBe(422);
   });
 });
+
+describe('Fish Audio voice', () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+    delete process.env.FISH_API_KEY;
+    delete process.env.FISH_VOICE_ID;
+  });
+
+  function callSpeech(body) {
+    const req = new EventEmitter();
+    Object.assign(req, { method: 'POST', url: '/api/lumo/speech', destroy() {} });
+    return new Promise((resolve) => {
+      const res = {
+        statusCode: 200, headers: {},
+        setHeader(k, v) { this.headers[k.toLowerCase()] = v; },
+        end(data) { resolve({ status: this.statusCode, headers: this.headers, body: data }); },
+      };
+      lumoApi(req, res);
+      queueMicrotask(() => { req.emit('data', Buffer.from(JSON.stringify(body))); req.emit('end'); });
+    });
+  }
+
+  it('asks Fish for the free model with the chosen voice and a slower pace for words', async () => {
+    process.env.FISH_API_KEY = 'fish-test';
+    process.env.FISH_VOICE_ID = 'voice123';
+    const calls = [];
+    globalThis.fetch = async (url, init) => {
+      calls.push({ url, init });
+      return new Response(Buffer.from('ID3fake-mp3'), { status: 200 });
+    };
+    const r = await callSpeech({ text: 'rabbit', style: 'word', voice: 'voice123' });
+    expect(r.status).toBe(200);
+    expect(r.headers['content-type']).toBe('audio/mpeg');
+    expect(calls[0].url).toBe('https://api.fish.audio/v1/tts');
+    expect(calls[0].init.headers.model).toBe('s2.1-pro-free');
+    expect(calls[0].init.headers.authorization).toBe('Bearer fish-test');
+    const sent = JSON.parse(calls[0].init.body);
+    expect(sent).toMatchObject({ text: 'rabbit', reference_id: 'voice123', format: 'mp3' });
+    expect(sent.prosody.speed).toBeLessThan(1);
+  });
+
+  it('when the free quota is used up, Lumo still speaks with the local voice', async () => {
+    const { localEngine } = await import('./local-tts.mjs');
+    if (!(await localEngine())) return; // no espeak-ng/Piper on this machine
+    process.env.FISH_API_KEY = 'fish-test';
+    globalThis.fetch = async () => new Response('quota', { status: 402 });
+    const r = await callSpeech({ text: 'Fresh line for the quota test.', style: 'lumo' });
+    expect(r.status).toBe(200);
+    expect(r.headers['x-lumo-voice']).toBe('local');
+  });
+});

@@ -1,20 +1,38 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createStorage, newProfile, type Profile, type Settings } from './profile';
 import { demoProfile } from './demo';
-import { rollWeekSnapshot, type RoundSummary } from '../engine/session';
-import type { GameId, Mastery, Word } from '../engine/types';
+import { rollWeekSnapshot, type RoundMode, type RoundSummary } from '../engine/session';
+import type { RoundItem } from '../engine/practice';
+import type { Mastery } from '../engine/types';
+import { useRouter } from '../router';
 import { setSfxEnabled } from '../services/sfx';
 import { loadStatus, setVoicePrefs, speak, speakSequence, stopSpeaking, type Part } from '../services/speech';
 import { toBubbles } from '../data/lines';
+import { forgetLibrary } from '../library/progress';
+import { forgetWordHelp } from '../library/wordhelp';
+import { clearUploads } from '../library/uploads';
 
+/** In-app destinations. Each maps to a real URL (see screenPath). */
 export type Screen =
   | { name: 'welcome' }
   | { name: 'hub' }
-  | { name: 'game'; game: GameId; words?: Word[] }
+  | { name: 'game'; mode: RoundMode; items?: RoundItem[] }
   | { name: 'complete'; summary: RoundSummary }
   | { name: 'closet' }
   | { name: 'settings' }
   | { name: 'grownup' };
+
+export function screenPath(s: Screen): string {
+  switch (s.name) {
+    case 'welcome': return '/start';
+    case 'hub': return '/classroom';
+    case 'game': return `/classroom/play/${s.mode}`;
+    case 'complete': return '/classroom/done';
+    case 'closet': return '/classroom/closet';
+    case 'settings': return '/settings';
+    case 'grownup': return '/grown-ups';
+  }
+}
 
 interface LumenContext {
   profile: Profile;
@@ -22,13 +40,11 @@ interface LumenContext {
   storageOk: boolean;
   /** Mastery when the app opened, used to detect improvement this session. */
   sessionStart: Mastery;
-  screen: Screen;
-  /** Increments on every navigation; keys screens so "Play again" starts fresh. */
-  navId: number;
   go: (s: Screen) => void;
   reducedMotion: boolean;
   loadDemo: () => void;
-  reset: () => void;
+  /** Reset progress (keeps settings), or with `everything` forget this device entirely. */
+  reset: (opts?: { everything?: boolean }) => Promise<void>;
   /** Lumo's current line(s), shown in a bubble and spoken. */
   say: (text: string, opts?: { silent?: boolean }) => void;
   speakWord: (text: string, rate?: number) => Promise<void>;
@@ -65,8 +81,7 @@ export function LumenProvider({ children }: { children: ReactNode }) {
   const storage = useMemo(() => createStorage(), []);
   const [profile, setProfile] = useState<Profile>(() => rollWeekSnapshot(storage.load() ?? newProfile()));
   const [sessionStart, setSessionStart] = useState<Mastery>(() => structuredClone(profile.mastery));
-  const [screen, setScreen] = useState<Screen>(() => (profile.onboarded ? { name: 'hub' } : { name: 'welcome' }));
-  const [navId, setNavId] = useState(0);
+  const { navigate } = useRouter();
   const [liveText, setLiveText] = useState('');
   const systemReduced = usePrefersReducedMotion();
   const reducedMotion = profile.settings.motion === 'reduced' || (profile.settings.motion === 'system' && systemReduced);
@@ -87,10 +102,11 @@ export function LumenProvider({ children }: { children: ReactNode }) {
 
   const go = useCallback((s: Screen) => {
     stopSpeaking();
-    setScreen(s);
-    setNavId((n) => n + 1);
+    const state = s.name === 'game' ? { items: s.items } : s.name === 'complete' ? { summary: s.summary } : undefined;
+    // A finished round replaces the round page, so "back" returns to the Classroom, not a restarted round.
+    navigate(screenPath(s), { state, replace: s.name === 'complete' });
     window.scrollTo?.({ top: 0 });
-  }, []);
+  }, [navigate]);
 
   const announce = useCallback((text: string) => {
     // Clear first so repeating the same words is announced again.
@@ -119,17 +135,28 @@ export function LumenProvider({ children }: { children: ReactNode }) {
     setSessionStart(structuredClone(demo.mastery));
   }, []);
 
-  const reset = useCallback(() => {
+  const reset = useCallback(async (opts: { everything?: boolean } = {}) => {
     stopSpeaking();
     storage.clear();
+    forgetLibrary();
+    forgetWordHelp();
+    await clearUploads();
+    if (opts.everything) {
+      // Forget this device: settings, uploads, cached voice and intro too.
+      try {
+        for (const k of Object.keys(localStorage)) if (k.startsWith('lumen.')) localStorage.removeItem(k);
+        sessionStorage.clear();
+        if ('caches' in window) await caches.delete('lumo-voice-v1');
+      } catch { /* storage blocked */ }
+    }
     const fresh = newProfile();
-    setProfile((p) => ({ ...fresh, settings: p.settings }));
+    setProfile((p) => ({ ...fresh, settings: opts.everything ? fresh.settings : p.settings }));
     setSessionStart({});
-    setScreen({ name: 'welcome' });
-  }, [storage]);
+    navigate('/', { replace: true });
+  }, [storage, navigate]);
 
   const value: LumenContext = {
-    profile, update, storageOk: storage.available, sessionStart, screen, navId, go, reducedMotion,
+    profile, update, storageOk: storage.available, sessionStart, go, reducedMotion,
     loadDemo, reset, say, speakWord, speakParts, announce,
   };
 
