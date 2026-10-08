@@ -66,6 +66,11 @@ async function answerChoice(page) {
 }
 
 /** Plays a Classroom round of whichever game comes up, until Round complete. */
+/** Wait until a page change has finished: the slide is done and focus has moved to the new heading. */
+async function settled(page) {
+  await page.waitForFunction(() => !document.documentElement.dataset.nav && document.activeElement?.matches('h1'), null, { timeout: 10000 }).catch(() => {});
+}
+
 async function playRound(page) {
   for (let i = 0; i < 9; i++) {
     if (await visible(page.getByText('Round complete!'))) return;
@@ -229,6 +234,7 @@ try {
 
   await journey('Reader keyboard: arrows move word by word; Enter opens help; Esc closes', async () => {
     await page.locator('.cards:not(.continue .cards) .story-card', { hasText: 'Pip the Pup' }).last().click();
+    await settled(page);
     await page.locator('.read-text .w[tabindex="0"]').focus();
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('Enter');
