@@ -157,14 +157,28 @@ export interface InsightInput {
   sessionStart: Mastery;
   oldLevel: number;
   newLevel: number;
+  /** Tags of the words answered right first try this round. */
+  firstTryTags?: Tag[][];
+}
+
+/**
+ * The tag the learner just showed they're good at: the one shared by the most
+ * first-try words this round, ties broken by mastery. "4 short words right on
+ * the first try" is a claim the learner can see for themselves.
+ */
+function roundStrength(mastery: Mastery, firstTryTags: Tag[][]): Tag | undefined {
+  const counts = new Map<Tag, number>();
+  firstTryTags.flat().forEach((t) => counts.set(t, (counts.get(t) ?? 0) + 1));
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || masteryOf(mastery, b[0]) - masteryOf(mastery, a[0]))[0]?.[0];
 }
 
 /** One "Lumo noticed" sentence per round, by fixed priority. */
-export function computeInsight({ mastery, sessionStart, oldLevel, newLevel }: InsightInput): Insight {
+export function computeInsight({ mastery, sessionStart, oldLevel, newLevel, firstTryTags = [] }: InsightInput): Insight {
   const levels = { level: `${oldLevel}->${newLevel}` };
 
   if (newLevel > oldLevel) {
-    const strong = strongestTag(mastery);
+    const strong = roundStrength(mastery, firstTryTags) ?? strongestTag(mastery);
     const name = strong ? SHORT_NAME[strong] : 'these words';
     return {
       kind: 'level-up',

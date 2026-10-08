@@ -4,7 +4,9 @@ import { shuffle, type Rng } from './random';
 import type { Word } from './types';
 
 const VOWELS = new Set(['a', 'e', 'i', 'o', 'u']);
+/** Decoy twin for a letter (b for d, p for q...). */
 const CONFUSABLE_PAIRS: Record<string, string> = { b: 'd', d: 'b', p: 'q', q: 'p', m: 'w', w: 'm', n: 'u', u: 'n' };
+const LOOK_ALIKE = new Set(['bd', 'db', 'pq', 'qp', 'gq', 'qg', 'bp', 'pb', 'mw', 'wm', 'nu', 'un', 'mn', 'nm']);
 const DIGRAPHS = ['sh', 'ch', 'th', 'ph', 'wh', 'kn', 'qu', 'ck'];
 
 export function optionCount(level: number): number {
@@ -29,7 +31,7 @@ export function isClose(word: string, miss: string): boolean {
   const diffs: [string, string][] = [];
   for (let i = 0; i < word.length; i++) if (word[i] !== miss[i]) diffs.push([word[i], miss[i]]);
   return diffs.length >= 1 && diffs.length <= 2 && diffs.every(
-    ([a, b]) => CONFUSABLE_PAIRS[a] === b || (VOWELS.has(a) && VOWELS.has(b)),
+    ([a, b]) => LOOK_ALIKE.has(a + b) || (VOWELS.has(a) && VOWELS.has(b)),
   );
 }
 

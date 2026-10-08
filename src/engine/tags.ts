@@ -54,7 +54,7 @@ export const SKILLS: { label: string; tags: Tag[] }[] = [
   { label: 'Spelling and order', tags: ['short', 'medium', 'long', 'multi'] },
 ];
 
+/** Sentence-case a phrase. A leading quoted letter ('b' and 'd' words) is left alone. */
 export function capitalize(s: string): string {
-  const i = s.search(/[a-z]/i);
-  return i < 0 ? s : s.slice(0, i) + s[i].toUpperCase() + s.slice(i + 1);
+  return /^[a-z]/.test(s) ? s[0].toUpperCase() + s.slice(1) : s;
 }
