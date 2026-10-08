@@ -163,3 +163,16 @@ describe('speech bubbles', () => {
     b.forEach((s) => expect(s.split(/\s+/).length).toBeLessThanOrEqual(12));
   });
 });
+
+describe('round summaries from browser history', () => {
+  it('rejects partial or old-shaped summaries, so the page never crashes', async () => {
+    const { isRoundSummary } = await import('./session');
+    expect(isRoundSummary(null)).toBe(false);
+    expect(isRoundSummary({ mode: 'detective', results: [] })).toBe(false);
+    expect(isRoundSummary({
+      mode: 'detective', game: 'detective', recommended: 'sound', results: ['first'], words: ['cat'], stages: [],
+      firsts: 1, stars: 3, xp: 10, xpBefore: 0, oldLevel: 1, newLevel: 1, bonusFixed: 0, bonusTotal: 0, cleared: 0,
+      insight: { text: 'Nice.' },
+    })).toBe(true);
+  });
+});

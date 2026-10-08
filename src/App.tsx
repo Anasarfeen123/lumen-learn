@@ -18,7 +18,7 @@ import { GrownUpGate } from './screens/GrownUp';
 import { Library, AddReading, ReviewUpload, ReadStory, ReadUpload, ReadLumoStory } from './library/LibraryPages';
 import { Playground, PlaygroundGame } from './playground/Playground';
 import { ActivityScreen } from './classroom/ActivityScreen';
-import { isGame, type RoundMode, type RoundSummary } from './engine/session';
+import { isGame, isRoundSummary, type RoundMode } from './engine/session';
 import type { RoundItem } from './engine/practice';
 import { ShortcutsHelp } from './components/Shortcuts';
 import { SoundNotice } from './components/SoundNotice';
@@ -81,8 +81,8 @@ function resolve(path: string, search: string, state: unknown, onboarded: boolea
     return { node: <GameScreen mode={mode} items={items} />, bare: true, title: isGame(mode) ? 'Playing' : 'Practice' };
   }
   if (path === '/classroom/done') {
-    const summary = (state as { summary?: RoundSummary } | null)?.summary;
-    return { node: summary ? <RoundComplete summary={summary} /> : <Redirect to="/classroom" />, bare: true, title: 'Round complete' };
+    const summary = (state as { summary?: unknown } | null)?.summary;
+    return { node: isRoundSummary(summary) ? <RoundComplete summary={summary} /> : <Redirect to="/classroom" />, bare: true, title: 'Round complete' };
   }
   if ((m = match('/classroom/activity/:id', path))) return { node: <ActivityScreen id={m.id} />, bare: true, title: 'Activity' };
   if (path === '/classroom/closet') return { node: <Closet />, title: "Lumo's closet" };

@@ -59,6 +59,21 @@ export interface RoundSummary {
   cleared: number;
 }
 
+/**
+ * A summary read back from browser history may come from an older version of
+ * Lumen (or a restored session). Only a complete one is shown.
+ */
+export function isRoundSummary(x: unknown): x is RoundSummary {
+  const s = x as Partial<RoundSummary> | null;
+  return Boolean(s && typeof s === 'object'
+    && typeof s.mode === 'string' && typeof s.game === 'string' && typeof s.recommended === 'string'
+    && Array.isArray(s.results) && Array.isArray(s.words) && Array.isArray(s.stages)
+    && typeof s.firsts === 'number' && typeof s.xp === 'number' && typeof s.xpBefore === 'number'
+    && typeof s.oldLevel === 'number' && typeof s.newLevel === 'number'
+    && typeof s.bonusFixed === 'number' && typeof s.bonusTotal === 'number' && typeof s.cleared === 'number'
+    && s.insight && typeof s.insight.text === 'string');
+}
+
 export function isFirstRoundToday(p: Profile, now = new Date()): boolean {
   const today = dayKey(now);
   return !p.rounds.some((r) => dayKey(new Date(r.t)) === today);
